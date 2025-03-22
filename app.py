@@ -17,6 +17,7 @@ console = Console()
 stt = whisper.load_model("base.en")
 # Use the simplified XTTS service as a drop-in replacement
 tts = SimpleXTTSService(cache_dir="./tts_cache")
+tts.set_speech_parameters(speaking_rate=1.7)
 
 template = """
 You are a helpful and friendly AI assistant. You are polite, respectful, and aim to provide concise responses.
@@ -153,7 +154,8 @@ if __name__ == "__main__":
                 start_time = time.time()
                 with console.status("Converting to speech (with caching)...", spinner="earth"):
                     # Using female voice preset with English language
-                    sample_rate, audio_array = tts.long_form_synthesize(response, voice_preset="female", language="en")
+                    sample_rate, audio_array = tts.long_form_synthesize(response, voice_preset="female2", language="en",
+                                                                        speed=1.5, pitch=0.1, energy=1.2)
                 tts_time = time.time() - start_time
                 console.print(f"[green]✓ Speech synthesis completed in {tts_time:.2f} seconds")
                 
