@@ -48,10 +48,10 @@ except ImportError:
 # Try to import Coqui TTS, but don't fail if it's not available
 COQUI_TTS_AVAILABLE = False
 try:
-    import TTS as TTSModule
-    from TTS.api import TTS as TTSClass
+    import TTS
+    from TTS.api import TTS as TTSApi
     COQUI_TTS_AVAILABLE = True
-    print(f"Coqui TTS version {TTSModule.__version__} available")
+    print(f"Coqui TTS version {TTS.__version__} available")
 except ImportError:
     print("WARNING: Coqui TTS not available. Using fallback synthesizer.")
 
@@ -77,88 +77,46 @@ class SimpleXTTSService:
         
         # Set up TTS model if available
         self.tts_model = None
-        self.sample_rate = 24000  # Default sample rate
+        self.sample_rate = 22050  # Default sample rate for Tacotron2
+        self.model_type = None
         
         if COQUI_TTS_AVAILABLE:
             try:
-                # Get available models for Coqui TTS 0.22.0
-                available_models = []
-                try:
-                    # This is the proper way to list models in 0.22.0
-                    print("Listing available TTS models...")
-                    tts_api = TTSClass()
-                    available_models = tts_api.list_models()
-                    print(f"Found {len(available_models)} available TTS models")
-                except Exception as e:
-                    print(f"Error listing models: {e}")
-                    
-                    # Try hardcoded list of common models as fallback
-                    available_models = [
-                        "tts_models/en/ljspeech/tacotron2-DDC",
-                        "tts_models/en/ljspeech/glow-tts",
-                        "tts_models/en/ljspeech/fast_pitch",
-                        "tts_models/multilingual/multi-dataset/xtts_v2",
-                        "tts_models/multilingual/multi-dataset/xtts_v1"
-                    ]
-                    print(f"Using fallback list of {len(available_models)} models")
+                # Try loading models in preferred order
+                preferred_models = [model_name] if model_name else [
+                    "tts_models/en/ljspeech/tacotron2-DDC",  # Reliable and works well with PyTorch 2.6+
+                    "tts_models/en/ljspeech/glow-tts",       # Alternative model
+                    "tts_models/en/ljspeech/fast_pitch"      # Another alternative
+                ]
                 
-                # Select model based on availability
-                selected_model = None
-                
-                # Use specified model if provided
-                if model_name:
-                    if model_name in available_models:
-                        selected_model = model_name
-                    else:
-                        print(f"Specified model '{model_name}' not available")
-                
-                # Otherwise select best available model
-                if not selected_model:
-                    # Try models in preference order
-                    preferred_models = [
-                        "tts_models/multilingual/multi-dataset/xtts_v2",  # Best quality
-                        "tts_models/multilingual/multi-dataset/xtts_v1",  # Good quality
-                        "tts_models/en/ljspeech/fast_pitch",              # Fast CPU-friendly
-                        "tts_models/en/ljspeech/tacotron2-DDC",           # Reliable fallback
-                        "tts_models/en/ljspeech/glow-tts"                 # Another option
-                    ]
-                    
-                    for model in preferred_models:
-                        if model in available_models:
-                            selected_model = model
-                            break
-                
-                    # If still no model selected, use first available
-                    if not selected_model and available_models:
-                        selected_model = available_models[0]
-                
-                # Load the selected model
-                if selected_model:
-                    print(f"Loading TTS model: {selected_model}")
+                # Try each model until one works
+                for model in preferred_models:
                     try:
-                        # Simple loading - should work with TORCH_LOAD_WEIGHTS_ONLY=0
-                        self.tts_model = TTSClass(selected_model).to(device)
-                        print(f"Successfully loaded {selected_model}")
+                        print(f"Attempting to load model: {model}")
+                        self.tts_model = TTSApi(model_name=model)
+                        self.tts_model.to(device)
                         
-                        # Try to determine sample rate from model
-                        if hasattr(self.tts_model, "synthesizer"):
-                            if hasattr(self.tts_model.synthesizer, "output_sample_rate"):
-                                self.sample_rate = self.tts_model.synthesizer.output_sample_rate
+                        # Detect model type
+                        self.model_type = model.split('/')[-1] if '/' in model else model
+                        print(f"Successfully loaded model: {model}")
+                        break
                     except Exception as e:
-                        print(f"Failed to load model {selected_model}: {e}")
-                        print("Trying simplified loader...")
-                        try:
-                            # Try with simpler model as fallback
-                            simple_model = "tts_models/en/ljspeech/tacotron2-DDC"
-                            if simple_model in available_models:
-                                self.tts_model = TTSClass(simple_model).to(device)
-                                print(f"Loaded fallback model {simple_model}")
-                        except Exception as e2:
-                            print(f"Could not load any TTS model: {e2}")
-                else:
-                    print("No suitable TTS models available")
+                        print(f"Failed to load model {model}: {e}")
+                
+                # Get sample rate from the loaded model
+                if self.tts_model:
+                    try:
+                        # First try the synthesizer's audio processor
+                        if hasattr(self.tts_model, "synthesizer") and hasattr(self.tts_model.synthesizer, "ap"):
+                            if hasattr(self.tts_model.synthesizer.ap, "sample_rate"):
+                                self.sample_rate = self.tts_model.synthesizer.ap.sample_rate
+                                print(f"Detected sample rate from model: {self.sample_rate} Hz")
+                    except Exception as e:
+                        print(f"Error detecting sample rate: {e}")
+                        print(f"Using default sample rate: {self.sample_rate} Hz")
             except Exception as e:
                 print(f"Error initializing TTS: {e}")
+                self.tts_model = None
         else:
             print("Coqui TTS not available - will use fallback synthesizer")
         
@@ -166,19 +124,20 @@ class SimpleXTTSService:
         self.cache_dir = cache_dir
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
-            self.cache_index_path = Path(self.cache_dir) / "simple_xtts_cache_index.json"
+            self.cache_index_path = Path(self.cache_dir) / "simple_tts_cache_index.json"
             self.load_cache_index()
         
-        # Voice presets - map friendly names to speaker IDs
-        # These depend on the model being used
+        # Voice presets don't apply to Tacotron2, but keep for compatibility
         self.voice_presets = {
-            "male": "male",
-            "female": "female", 
-            "female2": "female",
-            "male2": "male"
+            "male": None,     # Tacotron2 doesn't support speaker selection
+            "female": None,   # It uses a fixed voice
+            "female2": None,
+            "male2": None
         }
         
         print(f"SimpleXTTSService initialization complete. TTS model ready: {self.tts_model is not None}")
+        if self.tts_model is not None:
+            print(f"Model type: {self.model_type}, Sample rate: {self.sample_rate} Hz")
     
     def load_cache_index(self):
         """Load the cache index from disk or create a new one."""
@@ -200,7 +159,8 @@ class SimpleXTTSService:
     
     def get_cache_key(self, text, voice_preset):
         """Generate a unique cache key for the text and voice preset."""
-        key_string = f"{text}_{voice_preset}"
+        # For Tacotron2, voice_preset doesn't matter, but keep for compatibility
+        key_string = f"{text}_{self.model_type or 'fallback'}"
         return hashlib.md5(key_string.encode()).hexdigest()
     
     def get_cached_audio(self, text, voice_preset):
@@ -266,7 +226,7 @@ class SimpleXTTSService:
         
         self.save_cache_index()
     
-    def generate_fallback_audio(self, text, voice_preset="female"):
+    def generate_fallback_audio(self, text, voice_preset=None):
         """Generate a simple fallback audio when TTS is not available."""
         print(f"Using fallback audio synthesis for: '{text}'")
         
@@ -274,10 +234,7 @@ class SimpleXTTSService:
         duration = 0.1 + len(text) * 0.05  # Scale duration with text length
         
         # Generate different tones based on voice preset
-        if "female" in voice_preset:
-            freq = 440  # A4 note
-        else:
-            freq = 220  # A3 note
+        freq = 440  # A4 note (doesn't vary for Tacotron2 as it has a fixed voice)
             
         if NUMPY_AVAILABLE:
             # Generate a simple sine wave with numpy
@@ -306,26 +263,20 @@ class SimpleXTTSService:
             
             return self.sample_rate, temp_file.name
     
-    def synthesize(self, text, voice_preset=None):
+    def synthesize(self, text, voice_preset=None, language=None):
         """
         Synthesize speech from text using Coqui TTS or fallback.
         
         Args:
             text: Text to synthesize
-            voice_preset: Voice to use, or None for default
+            voice_preset: Voice to use, or None for default (ignored for Tacotron2)
         
         Returns:
             tuple: (sample_rate, audio_array)
         """
         if not text or text.strip() == "":
             return self.generate_fallback_audio("Empty text")
-        
-        # Use default voice if none specified
-        if voice_preset is None:
-            voice_preset = "female"
-        elif voice_preset in self.voice_presets:
-            voice_preset = self.voice_presets[voice_preset]
-        
+            
         start_time = time.time()
         
         # Check cache first
@@ -341,61 +292,51 @@ class SimpleXTTSService:
         # Try to use Coqui TTS if available
         if COQUI_TTS_AVAILABLE and self.tts_model is not None:
             try:
-                # Determine the right synthesis parameters based on model type
+                # For Tacotron2, we don't need any special parameters
                 kwargs = {}
                 
-                # Check if we're using XTTS
-                model_name = self.tts_model.model_name if hasattr(self.tts_model, "model_name") else ""
-                
-                if isinstance(model_name, str) and "xtts" in model_name.lower():
-                    print(f"Using XTTS model with {voice_preset} voice")
-                    kwargs["speaker"] = voice_preset
-                    kwargs["language"] = "en"
-                
                 # Generate speech with Coqui TTS
-                try:
-                    audio_output = self.tts_model.tts(text=text, **kwargs)
-                    
-                    # Handle different return types from TTS models
-                    if isinstance(audio_output, str):
-                        # TTS returned a file path
-                        output_path = audio_output
-                        if NUMPY_AVAILABLE:
-                            try:
-                                import soundfile as sf
-                                audio_array, _ = sf.read(output_path)
-                            except:
-                                audio_array = output_path
-                        else:
+                audio_output = self.tts_model.tts(text=text, **kwargs)
+                
+                # Handle the returned audio
+                if isinstance(audio_output, str):
+                    # TTS returned a file path
+                    output_path = audio_output
+                    if NUMPY_AVAILABLE:
+                        try:
+                            import soundfile as sf
+                            audio_array, _ = sf.read(output_path)
+                        except Exception as e:
+                            print(f"Error reading audio file: {e}")
                             audio_array = output_path
                     else:
-                        # TTS returned a numpy array
-                        audio_array = audio_output
-                    
-                    gen_time = time.time() - gen_start_time
-                    print(f"Synthesis completed in {gen_time:.3f}s - {len(text)/gen_time:.1f} chars/sec")
-                    
-                    # Cache the result
-                    self.cache_audio(text, voice_preset, audio_array)
-                    
-                    return self.sample_rate, audio_array
-                except Exception as e:
-                    print(f"Error in TTS synthesis: {str(e)}")
-                    
+                        audio_array = output_path
+                else:
+                    # TTS returned a numpy array
+                    audio_array = audio_output
+                
+                gen_time = time.time() - gen_start_time
+                print(f"Synthesis completed in {gen_time:.3f}s - {len(text)/gen_time:.1f} chars/sec")
+                
+                # Cache the result
+                self.cache_audio(text, voice_preset, audio_array)
+                
+                return self.sample_rate, audio_array
+                
             except Exception as e:
-                print(f"Error preparing TTS synthesis: {e}")
+                print(f"Error in TTS synthesis: {e}")
                 print("Falling back to basic audio generation")
         
         # If TTS failed or isn't available, use fallback
         return self.generate_fallback_audio(text, voice_preset)
     
-    def long_form_synthesize(self, text, voice_preset=None):
+    def long_form_synthesize(self, text, voice_preset=None, language=None):
         """
         Synthesize speech from long-form text by breaking it into sentences.
         
         Args:
             text: Long-form text to synthesize
-            voice_preset: Voice to use, or None for default
+            voice_preset: Voice to use, or None for default (ignored for Tacotron2)
         
         Returns:
             tuple: (sample_rate, audio_array)
@@ -466,20 +407,26 @@ class SimpleXTTSService:
             
             # Concatenate WAV files
             if all(isinstance(p, str) and os.path.exists(p) for p in audio_pieces):
-                data = []
-                for wav_file in audio_pieces:
-                    with wave.open(wav_file, 'rb') as w:
-                        data.append([w.getparams(), w.readframes(w.getnframes())])
-                
-                with wave.open(output_path, 'wb') as output:
-                    # Use parameters from the first file
-                    output.setparams(data[0][0])
-                    for _, frames in data:
-                        output.writeframes(frames)
-                
-                return sample_rate, output_path
+                try:
+                    data = []
+                    for wav_file in audio_pieces:
+                        with wave.open(wav_file, 'rb') as w:
+                            data.append([w.getparams(), w.readframes(w.getnframes())])
+                    
+                    with wave.open(output_path, 'wb') as output:
+                        # Use parameters from the first file
+                        output.setparams(data[0][0])
+                        for _, frames in data:
+                            output.writeframes(frames)
+                    
+                    return sample_rate, output_path
+                except Exception as e:
+                    print(f"Error combining WAV files: {e}")
+                    # If combining fails, return the first one
+                    if audio_pieces:
+                        return sample_rate, audio_pieces[0]
             
-            # If we have a mix, this is more complex - just return the first one
+            # If we have a mix or combining failed, just return the first one
             if audio_pieces:
                 return sample_rate, audio_pieces[0]
             else:
