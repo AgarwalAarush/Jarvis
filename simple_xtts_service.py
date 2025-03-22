@@ -310,28 +310,20 @@ class SimpleXTTSService:
             return self.sample_rate, temp_file.name
     
     def synthesize(self, text, voice_preset=None, language=None, 
-               speed=None, pitch=None, energy=None):
+                   speed=1.0, pitch=0.0, energy=1.0):
         """
         Synthesize speech from text using Coqui TTS or fallback.
         
         Args:
             text: Text to synthesize
-            voice_preset: Voice to use, or None for default
+            voice_preset: Voice to use, or None for default (ignored for Tacotron2)
             language: Language code (ignored for Tacotron2 as it's English only)
-            speed: Speaking speed override (1.0 is normal)
-            pitch: Pitch shift override (-1.0 to 1.0)
-            energy: Energy/volume override (1.0 is normal)
         
         Returns:
             tuple: (sample_rate, audio_array)
         """
         if not text or text.strip() == "":
             return self.generate_fallback_audio("Empty text")
-        
-        # Use parameter overrides if provided, otherwise use instance values
-        speaking_rate = speed if speed is not None else getattr(self, 'speaking_rate', 1.0)
-        pitch_shift = pitch if pitch is not None else getattr(self, 'pitch_shift', 0.0)
-        energy_value = energy if energy is not None else getattr(self, 'energy', 1.0)
                 
         start_time = time.time()
         
@@ -348,32 +340,12 @@ class SimpleXTTSService:
         # Try to use Coqui TTS if available
         if COQUI_TTS_AVAILABLE and self.tts_model is not None:
             try:
-                # Prepare keyword arguments based on model type
+                # For Tacotron2, we don't need any special parameters
                 kwargs = {}
 
-                if hasattr(self, "model_type") and self.model_type:
-                    if "vctk" in self.model_type.lower():
-                        kwargs["speaker_id"] = "p226"  # Example: male speaker
-                    
-                    # Apply appropriate parameters based on model type
-                    if "vits" in self.model_type.lower():
-                        # VITS model parameters
-                        kwargs.update({
-                            "length_scale": 1.0 / speaking_rate,  # Inverse relationship
-                            "noise_scale": max(0.3, 0.667 - (speaking_rate - 1.0) * 0.1),  # Reduce noise for faster speech
-                            "noise_scale_w": 0.8,
-                        })
-                    elif "xtts" in self.model_type.lower():
-                        # XTTS specific parameters
-                        kwargs.update({
-                            "speed": speaking_rate,
-                            "temperature": max(0.3, 0.65 - (speaking_rate - 1.0) * 0.1),  # Adjust temperature based on speed
-                        })
-                    else:
-                        # Generic parameters for other models
-                        kwargs.update({
-                            "length_scale": 1.0 / speaking_rate,  # Inverse relationship
-                        })
+                if hasattr(self, "model_type") and self.model_type and "vctk" in self.model_type.lower():
+                    kwargs["speaker_id"] = "p226"  # Example: male speaker
+                    # kwargs["speaker_id"] = "p229"  # Example: female speaker
                 
                 # Generate speech with Coqui TTS
                 audio_output = self.tts_model.tts(text=text, **kwargs)
@@ -401,18 +373,14 @@ class SimpleXTTSService:
         # If TTS failed or isn't available, use fallback
         return self.generate_fallback_audio(text, voice_preset)
 
-    def long_form_synthesize(self, text, voice_preset=None, language=None, 
-                            speed=None, pitch=None, energy=None):
+    def long_form_synthesize(self, text, voice_preset=None, language=None, speed=1.0, pitch=0.0, energy=1.0):
         """
         Synthesize speech from long-form text by breaking it into sentences.
         
         Args:
             text: Long-form text to synthesize
-            voice_preset: Voice to use, or None for default
-            language: Language code
-            speed: Speaking speed override (1.0 is normal)
-            pitch: Pitch shift override (-1.0 to 1.0)
-            energy: Energy/volume override (1.0 is normal)
+            voice_preset: Voice to use, or None for default (ignored for Tacotron2)
+            language: Language code (ignored for Tacotron2 as it's English only)
         
         Returns:
             tuple: (sample_rate, audio_array)
@@ -446,15 +414,7 @@ class SimpleXTTSService:
                 
             print(f"Synthesizing sentence {i+1}/{len(sentences)} ({progress:.1f}% complete)")
             try:
-                # Pass the speed, pitch, and energy parameters to the synthesize method
-                curr_sample_rate, audio = self.synthesize(
-                    sent, 
-                    voice_preset=voice_preset,
-                    language=language,
-                    speed=speed,
-                    pitch=pitch,
-                    energy=energy
-                )
+                curr_sample_rate, audio = self.synthesize(sent, voice_preset)
                 
                 # Save the sample rate from the first synthesis
                 if i == 0:
@@ -490,8 +450,6 @@ class SimpleXTTSService:
                 print(f"Error synthesizing sentence {i+1}: {e}")
                 # Continue with other sentences
         
-        # Rest of the method remains the same
-        # [Existing concatenation and return code]
         total_time = time.time() - start_time
         print(f"Total synthesis time: {total_time:.2f}s")
         if total_chars > 0:
