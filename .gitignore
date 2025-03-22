@@ -1,0 +1,21 @@
+# Audio files and caches
+*.wav
+*.mp3
+*.npy
+tts_cache/
+*.json
+
+# Temp files
+*.tmp
+
+# Log files
+*.log
+
+# Model files (if applicable)
+*.pth
+*.pt
+*.bin
+
+# Environment-specific files
+.env
+venv/
