@@ -6,6 +6,7 @@ import sounddevice as sd
 import os
 from queue import Queue
 from rich.console import Console
+from rich.progress import Progress
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 from langchain_core.messages import AIMessage, HumanMessage
@@ -22,7 +23,7 @@ tts = GoogleCloudTTSService(cache_dir="./tts_cache")
 tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
 
 template = """
-You are a helpful and friendly AI assistant. You are polite, respectful, and aim to provide concise responses.
+You are a helpful and friendly AI assistant. You are polite, respectful, and aim to provide concise responses of up to 3 sentences unless prompted otherwise. You are an expert in all things related to programming, machine learning, and software development. Unless instructed to do so otherwise, output everything in plain english, not in markdown.
 
 The conversation transcript is as follows:
 {history}
@@ -154,6 +155,22 @@ def play_audio_file(file_path):
         console.print(f"[red]Unsupported platform: {system}")
 
 
+def on_segment_played(segment, total, is_complete):
+    """
+    Callback function for playback progress updates.
+    
+    Args:
+        segment (int): The current segment number
+        total (int): Total number of segments
+        is_complete (bool): Whether playback is complete
+    """
+    if total > 0:
+        if is_complete:
+            console.print(f"[green]✓ All {total} segments played")
+        else:
+            console.print(f"[cyan]Playing segment {segment}/{total}")
+
+
 if __name__ == "__main__":
     console.print("[cyan]Assistant started! Press Ctrl+C to exit.")
 
@@ -197,23 +214,25 @@ if __name__ == "__main__":
                 console.print(f"[cyan]Assistant: {response}")
                 console.print(f"[green]✓ LLM response generated in {llm_time:.2f} seconds")
                 
-                # Text-to-speech step with Google Cloud TTS
+                # Text-to-speech step with Google Cloud TTS using threaded playback
                 start_time = time.time()
-                with console.status("Converting to speech with Google Cloud TTS...", spinner="earth"):
+                with console.status("Converting to speech and playing in real-time...", spinner="dots"):
                     # Using the same voice as in the example (en-US-Chirp3-HD-Aoede)
-                    sample_rate, audio_data = tts.long_form_synthesize(
+                    playback_thread = tts.long_form_synthesize_threaded(
                         response, 
                         voice_preset="female",  # Maps to en-US-Chirp3-HD-Aoede
                         language="en-US",
                         speed=1.0,      # Default speaking rate
                         pitch=0.0,      # Default pitch
-                        energy=0.0      # Default volume gain
+                        energy=0.0,     # Default volume gain
+                        progress_callback=on_segment_played
                     )
+                    
+                    # Wait for playback to complete
+                    playback_thread.join()
+                    
                 tts_time = time.time() - start_time
-                console.print(f"[green]✓ Speech synthesis completed in {tts_time:.2f} seconds")
-                
-                # Play the audio
-                play_audio(sample_rate, audio_data)
+                console.print(f"[green]✓ Speech synthesis and playback completed in {tts_time:.2f} seconds")
                 
                 # Total processing time
                 console.print(f"[blue]Total processing time: {transcription_time + llm_time + tts_time:.2f} seconds")
@@ -223,6 +242,8 @@ if __name__ == "__main__":
                 )
 
     except KeyboardInterrupt:
+        # Stop any ongoing playback
+        tts.stop_threaded_playback()
         console.print("\n[red]Exiting...")
 
     console.print("[blue]Session ended.")
