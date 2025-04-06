@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary title="MyApp Scripting Definition">
+    <suite name="MyApp Suite" code="MyAP" description="Scripting commands for MyApp">
+        <command name="sendMessage" code="SndM" description="Send a message to the app">
+            <cocoa class="SendMessageCommand"/>
+            <parameter name="messageText" code="Mess" type="text" description="The message to send"/>
+        </command>
+    </suite>
+</dictionary>
