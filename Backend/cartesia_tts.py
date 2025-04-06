@@ -28,6 +28,10 @@ class CartesiaTTS:
         self.model = model
         self.voice = voice
 
+        self.client = Cartesia(
+            api_key=self.api_key
+        )
+
     def stream_tts(self, text: str, speed: int = 0, sample_rate: int = 44100, channels: int = 1):
         """
         Streams audio directly from the Cartesia TTS API as the data is received.
@@ -38,11 +42,8 @@ class CartesiaTTS:
             sample_rate: Audio sample rate (must match API settings).
             channels: Number of audio channels (default is 1 for mono).
         """
-        client = Cartesia(
-            api_key=os.getenv("CARTESIA_API_KEY"),
-        )
 
-        response = client.tts.sse(
+        response = self.client.tts.sse(
             model_id=self.model,
             transcript=text,
             voice={
