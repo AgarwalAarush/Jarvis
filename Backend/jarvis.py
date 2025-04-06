@@ -3,6 +3,7 @@ import threading
 import numpy as np
 import whisper
 import sounddevice as sd
+import os
 from queue import Queue
 from rich.console import Console
 from langchain_ollama import OllamaLLM
@@ -10,15 +11,32 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-# Import the Google Cloud TTS service
+# Import TTS services
 from google_cloud_tts_service import GoogleCloudTTSService
+# from cartesia_tts_service import CartesiaTTSService
 
 console = Console()
 stt = whisper.load_model("base.en")
-# Initialize the Google Cloud TTS service
-tts = GoogleCloudTTSService(cache_dir="./tts_cache")
-# Set parameters using Google Cloud's range: speaking_rate (0.25-4.0), pitch (-20.0-20.0), volume_gain_db (-96.0-16.0)
-tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
+
+# Initialize TTS services
+google_tts = GoogleCloudTTSService(cache_dir="./tts_cache")
+cartesia_tts = CartesiaTTSService(cache_dir="./tts_cache")
+
+# Set parameters for both services
+google_tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
+cartesia_tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
+
+# Load TTS service preference from .env file
+# Create a .env file in the project root with TTS_SERVICE=google or TTS_SERVICE=cartesia
+from dotenv import load_dotenv
+load_dotenv()
+
+tts_service = os.environ.get("TTS_SERVICE", "cartesia").lower()
+
+# Select the active TTS service
+tts = cartesia_tts if tts_service == "cartesia" else google_tts
+
+console.print(f"[cyan]Using {tts_service.capitalize()} TTS service")
 
 # Update template to use chat format
 prompt = ChatPromptTemplate.from_messages([
@@ -76,6 +94,7 @@ def transcribe(audio_np: np.ndarray) -> str:
     """
     result = stt.transcribe(audio_np, fp16=False)  # Set fp16=True if using a GPU
     text = result["text"].strip()
+    text = "What is a CNN?"
     return text
 
 
@@ -215,22 +234,28 @@ if __name__ == "__main__":
                 console.print(f"[cyan]Assistant: {response}")
                 console.print(f"[green]✓ LLM response generated in {llm_time:.2f} seconds")
                 
-                # Text-to-speech step with Google Cloud TTS using threaded playback
+                # Text-to-speech step using the selected TTS service
                 start_time = time.time()
                 with console.status("Converting to speech and playing in real-time...", spinner="dots"):
-                    # Using the same voice as in the example (en-US-Chirp3-HD-Aoede)
-                    playback_thread = tts.long_form_synthesize_threaded(
-                        response, 
-                        voice_preset="female",  # Maps to en-US-Chirp3-HD-Aoede
-                        language="en-US",
-                        speed=1.0,      # Default speaking rate
-                        pitch=0.0,      # Default pitch
-                        energy=0.0,     # Default volume gain
-                        progress_callback=on_segment_played
-                    )
+                    if tts_service == "cartesia":
+                        # Using Cartesia with sonic-2 model and Joan voice (built-in)
+                        sample_rate, audio_files = tts.text_to_speech(response)
+                        play_audio(sample_rate, audio_files)
+                    else:
+                        # Using Google Cloud TTS
+                        playback_thread = tts.long_form_synthesize_threaded(
+                            response, 
+                            voice_preset="female",  # Maps to en-US-Chirp3-HD-Aoede
+                            language="en-US",
+                            speed=1.0,      # Default speaking rate
+                            pitch=0.0,      # Default pitch
+                            energy=0.0,     # Default volume gain
+                            progress_callback=on_segment_played
+                        )
+                        # Wait for playback to complete
+                        playback_thread.join()
                     
-                    # Wait for playback to complete
-                    playback_thread.join()
+                    # Playback already handled in the condition above
                     
                 tts_time = time.time() - start_time
                 console.print(f"[green]✓ Speech synthesis and playback completed in {tts_time:.2f} seconds")
@@ -244,7 +269,8 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         # Stop any ongoing playback
-        tts.stop_threaded_playback()
+        if tts_service == "google":
+            tts.stop_threaded_playback()
         console.print("\n[red]Exiting...")
 
     console.print("[blue]Session ended.")
