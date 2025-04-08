@@ -87,7 +87,6 @@ def transcribe(audio_np: np.ndarray) -> str:
     """
     result = stt.transcribe(audio_np, fp16=False)  # Set fp16=True if using a GPU
     text = result["text"].strip()
-    text = "What is a CNN?"
     return text
 
 def get_llm_response(text: str) -> str:

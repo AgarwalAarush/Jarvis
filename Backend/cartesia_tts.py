@@ -5,9 +5,6 @@ import base64
 from cartesia import Cartesia
 from cartesia.tts import Controls, OutputFormat_RawParams, TtsRequestIdSpecifierParams
 
-from dotenv import load_dotenv
-load_dotenv()
-
 voices = {
     "Joan": "5abd2130-146a-41b1-bcdb-974ea8e19f56",
     "DEFAULT": "f9836c6e-a0bd-460e-9d3c-f7299fa60f94"
@@ -15,6 +12,10 @@ voices = {
 
 class CartesiaTTS:
     def __init__(self, voice: str = "DEFAULT", model: str = "sonic-2", api_key: str = None):
+        # load .env file
+        from dotenv import load_dotenv
+        load_dotenv()
+
         # initialize api
         self.api_key = api_key or os.getenv("CARTESIA_API_KEY")
         if not self.api_key:
@@ -80,10 +81,9 @@ class CartesiaTTS:
                 except Exception as e:
                     print(f"Error streaming chunk {idx + 1}: {e}")
 
-
 if __name__ == "__main__":
     print("Streaming Cartesia TTS...")
     tts_service = CartesiaTTS(voice="Joan")
-    tts_service.stream_tts("What is a CNN?")
+    tts_service.stream_tts("A CNN, or Convolutional Neural Network, is a type of deep learning model that’s especially good at processing data with a grid-like topology—most commonly used for image and video recognition, but also applied in speech, NLP, and more.")
     # stream_tts(text="What is a CNN?", voice="Joan")
     print("Streaming complete")
