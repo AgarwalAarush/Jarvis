@@ -13,18 +13,19 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 # Import TTS services
 from google_cloud_tts_service import GoogleCloudTTSService
-# from cartesia_tts_service import CartesiaTTSService
+from cartesia_tts import CartesiaTTS
 
 console = Console()
 stt = whisper.load_model("base.en")
 
 # Initialize TTS services
 google_tts = GoogleCloudTTSService(cache_dir="./tts_cache")
-cartesia_tts = CartesiaTTSService(cache_dir="./tts_cache")
+cartesia_tts = CartesiaTTS(
+	voice = os.environ.get("CARTESIA_VOICE", "Joan"),
+)
 
 # Set parameters for both services
 google_tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
-cartesia_tts.set_speech_parameters(speaking_rate=1.5, pitch_shift=0.0, energy=0.0)
 
 # Load TTS service preference from .env file
 # Create a .env file in the project root with TTS_SERVICE=google or TTS_SERVICE=cartesia
@@ -50,7 +51,7 @@ def get_message_history():
     return ChatMessageHistory()
 
 # Create the chain with message history
-chain_model = OllamaLLM(model="llama3.2")
+chain_model = OllamaLLM(model="llama3.2:3b")
 chain = prompt | chain_model
 chain_with_history = RunnableWithMessageHistory(
     chain,
@@ -94,7 +95,6 @@ def transcribe(audio_np: np.ndarray) -> str:
     """
     result = stt.transcribe(audio_np, fp16=False)  # Set fp16=True if using a GPU
     text = result["text"].strip()
-    text = "What is a CNN?"
     return text
 
 
