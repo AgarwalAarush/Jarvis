@@ -12,7 +12,7 @@ class MemoryClient:
         
         # append memory to memory.txt
         if response != "":
-            FileSystem.append_txt("memory.txt", f"Query: {query}\nResponse: {response}\n")
+            FileSystem.append_txt("storage/memory.txt", f"Query: {query}\nResponse: {response}\n")
 
             # update last memory update
             FileSystem.change_json_value("systems.json", "last_memory_update", time.time())
@@ -20,7 +20,7 @@ class MemoryClient:
             last_memory_update += 1;
             FileSystem.change_json_value("systems.json", "last_memory_update", last_memory_update % memory_threshold)
         else:
-            FileSystem.append_txt("memory.txt", f"Query: {query}\n")
+            FileSystem.append_txt("storage/memory.txt", f"Query: {query}\n")
         
         # summarize memory.txt if threshold is reached
         if last_memory_update % memory_threshold == 0:
@@ -28,18 +28,18 @@ class MemoryClient:
             model = OllamaLLM(model="llama3.2:3b")
 
             # retrieve memory content
-            memory_content = FileSystem.retrieve_txt("memory.txt")
+            memory_content = FileSystem.retrieve_txt("storage/memory.txt")
 
             # retrieve memory summary prompt & summarize
             summary_prompt = f"{FileSystem.retrieve_txt('prompts/memory_summary.txt')}\n\n{memory_content}"
             summary = model.invoke(summary_prompt)
             
             # save the summary and reset memory.txt
-            FileSystem.write_txt("memory.txt", summary)
+            FileSystem.write_txt("storage/memory.txt", summary)
 
     @staticmethod
     def retrieve_memory():
-        return FileSystem.retrieve_txt("memory.txt")
+        return FileSystem.retrieve_txt("storage/memory.txt")
 
 class DateTimeClient:
     @staticmethod

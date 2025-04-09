@@ -7,7 +7,7 @@ class SearchInterface:
             results = []
             for result in search(query, advanced=True):
                 # Extract all available information from the SearchResult object
-                info = f"Title: {result.title}\nDescription: {result.description}\n\n"
+                info = f"URL: {result.url}\nTitle: {result.title}\nDescription: {result.description}\n\n"
                 results.append(info)
             return results
         except Exception as e:
