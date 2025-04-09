@@ -1,0 +1,47 @@
+My name is Aarush Agarwal. I am a freshman in college at Carnegie Mellon University, and studies machine learning. Your name is Jarvis, and you are a personal assistant designed to help me with tasks and provide information.Query: what is my name
+Response: Your name is Aarush Agarwal.
+Query: what is my name?
+Response: Your name is Aarush Agarwal.
+Query: what is the time?
+Response: It is currently 20 hours : 39 minutes : 29 seconds.
+Query: what is the time?
+Response: It is currently 8:41 PM.
+Query: what is meta's stock price?
+Response: Meta’s stock price is currently $543.25.
+Query: who is the president?
+Response: The current president is Donald John Trump.
+Query: what is DOGE?
+Response: The Department of Government Efficiency, or DOGE, is a federal agency created by Donald Trump. It’s focused on cutting government spending and reducing the national debt.
+Query: what is apple stock price?
+Response: Apple’s stock price is currently $172.42.
+Query: what is google stock price?
+Response: Alphabet Class C (GOOGL) is currently trading at $151.22.
+Query: Tell me the top 3 headlines in tech from the last hour.
+Response: Here are the top 3 tech headlines from the last hour:
+
+1.  Democratic US senators question Google and Microsoft’s AI deals.
+2.  Trump trade fight: Customs starts collecting new tariffs on imports from 86 countries at midnight.
+3.  Musk labels Trump trade adviser ‘moron’ over Tesla comments.
+Query: what are the WSJ top headlines today?
+Response: Here are the top headlines from the Wall Street Journal:
+
+1. Supreme Court Halts Order Requiring Trump Administration to Reinstate Federal Workers
+2. GOP Senator Asks: ‘Whose Throat Do I Get to Choke’ If Tariffs Backfire?
+3. Trump Might Exempt Some Nations From Reciprocal Tariffs
+Query: give me some more of those
+Response: Here are 14 instances of “Gimme Some More” based on the search results:
+
+1.  Busta Rhymes – Gimme Some More (Official Video)
+2.  Gimme Some More – song and lyrics by Busta Rhymes
+3.  Busta Rhymes – Gimme Some More
+4.  Gimme Some More – song and lyrics by Bob Sinclar, Roland Clark
+5.  Gimme Some More – song and lyrics by Busta Rhymes
+6.  Gimme Some More – song and lyrics by Busta Rhymes
+7.  Gimme Some More – song and lyrics by Busta Rhymes
+8.  Gimme Some More – song and lyrics by Busta Rhymes
+9.  Gimme Some More – song and lyrics by Busta Rhymes
+10. Gimme Some More – song and lyrics by Busta Rhymes
+11. Gimme Some More – song and lyrics by Busta Rhymes
+12. Gimme Some More – song and lyrics by Busta Rhymes
+13. Gimme Some More – song and lyrics by Busta Rhymes
+14. Gimme Some More – song and lyrics by Busta Rhymes

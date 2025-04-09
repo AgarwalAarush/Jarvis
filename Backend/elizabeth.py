@@ -103,6 +103,7 @@ def get_llm_response(text: str) -> str:
         {"input": text},
         config={"configurable": {"session_id": "default"}}
     )
+    return response
 
 if __name__ == "__main__":
     console.print("[cyan]Assistant started! Press Ctrl+C to exit.")

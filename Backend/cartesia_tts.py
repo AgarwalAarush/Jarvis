@@ -3,12 +3,6 @@ import numpy as np
 import sounddevice as sd
 import base64
 from cartesia import Cartesia
-from cartesia.tts import Controls, OutputFormat_RawParams, TtsRequestIdSpecifierParams
-
-voices = {
-    "Joan": "5abd2130-146a-41b1-bcdb-974ea8e19f56",
-    "DEFAULT": "f9836c6e-a0bd-460e-9d3c-f7299fa60f94"
-}
 
 class CartesiaTTS:
     def __init__(self, voice: str = "DEFAULT", model: str = "sonic-2", api_key: str = None):
@@ -48,7 +42,7 @@ class CartesiaTTS:
             model_id=self.model,
             transcript=text,
             voice={
-                "id": voices[self.voice],
+                "id": self.voices[self.voice],
                 "experimental_controls": {
                     "speed": speed,
                     "emotion": [],
@@ -77,13 +71,13 @@ class CartesiaTTS:
 
                     # Write audio data directly to the stream
                     stream.write(audio_data)
-                    print(f"Streamed chunk {idx + 1}: {len(audio_data)} samples")
+                    # print(f"Streamed chunk {idx + 1}: {len(audio_data)} samples")
                 except Exception as e:
                     print(f"Error streaming chunk {idx + 1}: {e}")
 
-if __name__ == "__main__":
-    print("Streaming Cartesia TTS...")
-    tts_service = CartesiaTTS(voice="Joan")
-    tts_service.stream_tts("A CNN, or Convolutional Neural Network, is a type of deep learning model that’s especially good at processing data with a grid-like topology—most commonly used for image and video recognition, but also applied in speech, NLP, and more.")
-    # stream_tts(text="What is a CNN?", voice="Joan")
-    print("Streaming complete")
+# if __name__ == "__main__":
+#     print("Streaming Cartesia TTS...")
+#     tts_service = CartesiaTTS(voice="Joan")
+#     tts_service.stream_tts("A CNN, or Convolutional Neural Network, is a type of deep learning model that’s especially good at processing data with a grid-like topology—most commonly used for image and video recognition, but also applied in speech, NLP, and more.")
+#     # stream_tts(text="What is a CNN?", voice="Joan")
+#     print("Streaming complete")

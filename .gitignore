@@ -79,7 +79,7 @@ coverage.xml
 *.mp3
 *.npy
 tts_cache/
-*.json
+# *.json
 
 # Temp files
 *.tmp
