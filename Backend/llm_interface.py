@@ -60,5 +60,6 @@ class LLMInterface:
 if __name__ == "__main__":
     while True:
         prompt = input("You: ")
-        response = LLMInterface.get_live_chatbot_response(prompt)
-        print("[cyan]Assistant: " + response)
+        response = LLMInterface.get_abstraction_response(prompt)
+        print(response)
+        # print("[cyan]Assistant: " + response)
