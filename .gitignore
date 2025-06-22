@@ -95,3 +95,6 @@ tts_cache/
 # Environment-specific files
 .env
 venv/
+
+# AI
+Claude.md

@@ -44,7 +44,8 @@ def get_message_history():
     return ChatMessageHistory()
 
 # Create the chain with message history
-chain_model = OllamaLLM(model="llama3.2:3b")
+# chain_model = OllamaLLM(model="llama3.2:3b")
+chain_model = OllamaLLM(model="gemma3:4b")
 chain = prompt | chain_model
 chain_with_history = RunnableWithMessageHistory(
     chain,
