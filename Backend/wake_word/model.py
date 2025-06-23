@@ -14,9 +14,8 @@
 
 # Imports
 import numpy as np
-from utils import AudioFeatures, re_arg
-
-from vad import VAD
+from .utils import AudioFeatures, re_arg
+from .vad import VAD
 
 import wave
 import os
@@ -34,6 +33,7 @@ MODELS = {
     }
 }
 
+
 def get_pretrained_model_paths(inference_framework="tflite"):
     if inference_framework == "tflite":
         return [MODELS[i]["model_path"] for i in MODELS.keys()]
@@ -41,9 +41,11 @@ def get_pretrained_model_paths(inference_framework="tflite"):
         return [MODELS[i]["model_path"].replace(".tflite", ".onnx") for i in MODELS.keys()]
 
 # Define main model class
+
+
 class Model():
     """
-    The main model class for openWakeWord. Creates a model object with the shared audio pre-processer
+    The main model class for WakeWord. Creates a model object with the shared audio pre-processer
     and for arbitrarily many custom wake word/wake phrase models.
     """
     @re_arg({"wakeword_model_paths": "wakeword_models"})  # temporary handling of keyword argument change
@@ -57,11 +59,11 @@ class Model():
             custom_verifier_threshold: float = 0.1,
             inference_framework: str = "tflite",
             **kwargs
-            ):
-        """Initialize the openWakeWord model object.
+    ):
+        """Initialize the WakeWord model object.
 
         Args:
-            wakeword_models (List[str]): A list of paths of ONNX/tflite models to load into the openWakeWord model object.
+            wakeword_models (List[str]): A list of paths of ONNX/tflite models to load into the WakeWord model object.
                                               If not provided, will load all of the pre-trained models. Alternatively,
                                               just the names of pre-trained models can be provided to select a subset of models.
             class_mapping_dicts (List[dict]): A list of dictionaries with integer to string class mappings for
@@ -70,7 +72,7 @@ class Model():
             enable_speex_noise_suppression (bool): Whether to use the noise suppresion from the SpeexDSP
                                                    library to pre-process all incoming audio. May increase
                                                    model performance when reasonably stationary background noise
-                                                   is present in the environment where openWakeWord will be used.
+                                                   is present in the environment where WakeWord will be used.
                                                    It is very lightweight, so enabling it doesn't significantly
                                                    impact efficiency.
             vad_threshold (float): Whether to use a voice activity detection model (VAD) from Silero
@@ -79,7 +81,7 @@ class Model():
                                    with VAD scores above the threshold will be returned. The default value (0),
                                    disables voice activity detection entirely.
             custom_verifier_models (dict): A dictionary of paths to custom verifier models, where
-                                           the keys are the model names (corresponding to the openwakeword.MODELS
+                                           the keys are the model names (corresponding to the wakeword.MODELS
                                            attribute) and the values are the filepaths of the
                                            custom verifier models.
             custom_verifier_threshold (float): The score threshold to use a custom verifier model. If the score
@@ -93,7 +95,8 @@ class Model():
             kwargs (dict): Any other keyword arguments to pass the the preprocessor instance
         """
         # Get model paths for pre-trained models if user doesn't provide models to load
-        pretrained_model_paths = get_pretrained_model_paths(inference_framework)
+        pretrained_model_paths = get_pretrained_model_paths(
+            inference_framework)
         wakeword_model_names = []
         if wakeword_models == []:
             wakeword_models = pretrained_model_paths
@@ -101,12 +104,15 @@ class Model():
         elif len(wakeword_models) >= 1:
             for ndx, i in enumerate(wakeword_models):
                 if os.path.exists(i):
-                    wakeword_model_names.append(os.path.splitext(os.path.basename(i))[0])
+                    wakeword_model_names.append(
+                        os.path.splitext(os.path.basename(i))[0])
                 else:
                     # Find pre-trained path by modelname
-                    matching_model = [j for j in pretrained_model_paths if i.replace(" ", "_") in j.split(os.path.sep)[-1]]
+                    matching_model = [j for j in pretrained_model_paths if i.replace(
+                        " ", "_") in j.split(os.path.sep)[-1]]
                     if matching_model == []:
-                        raise ValueError("Could not find pretrained model for model name '{}'".format(i))
+                        raise ValueError(
+                            "Could not find pretrained model for model name '{}'".format(i))
                     else:
                         wakeword_models[ndx] = matching_model[0]
                         wakeword_model_names.append(i)
@@ -137,7 +143,8 @@ class Model():
                     inference_framework = "onnx"
                 elif wakeword_models != [] and all([os.path.exists(i.replace('.tflite', '.onnx')) for i in wakeword_models]):
                     inference_framework = "onnx"
-                    wakeword_models = [i.replace('.tflite', '.onnx') for i in wakeword_models]
+                    wakeword_models = [
+                        i.replace('.tflite', '.onnx') for i in wakeword_models]
                 else:
                     raise ValueError("Tried to import the tflite runtime for provided tflite models, but it was not found. "
                                      "Please install it using `pip install tflite-runtime`")
@@ -150,13 +157,15 @@ class Model():
                     return onnx_model.run(None, {onnx_model.get_inputs()[0].name: x})
 
             except ImportError:
-                raise ValueError("Tried to import onnxruntime, but it was not found. Please install it using `pip install onnxruntime`")
+                raise ValueError(
+                    "Tried to import onnxruntime, but it was not found. Please install it using `pip install onnxruntime`")
 
         for mdl_path, mdl_name in zip(wakeword_models, wakeword_model_names):
-            # Load openwakeword models
+            # Load WakeWord models
             if inference_framework == "onnx":
                 if ".tflite" in mdl_path:
-                    raise ValueError("The onnx inference framework is selected, but tflite models were provided!")
+                    raise ValueError(
+                        "The onnx inference framework is selected, but tflite models were provided!")
 
                 sessionOptions = ort.SessionOptions()
                 sessionOptions.inter_op_num_threads = 1
@@ -165,36 +174,49 @@ class Model():
                 self.models[mdl_name] = ort.InferenceSession(mdl_path, sess_options=sessionOptions,
                                                              providers=["CPUExecutionProvider"])
 
-                self.model_inputs[mdl_name] = self.models[mdl_name].get_inputs()[0].shape[1]
-                self.model_outputs[mdl_name] = self.models[mdl_name].get_outputs()[0].shape[1]
-                pred_function = functools.partial(onnx_predict, self.models[mdl_name])
+                self.model_inputs[mdl_name] = self.models[mdl_name].get_inputs()[
+                    0].shape[1]
+                self.model_outputs[mdl_name] = self.models[mdl_name].get_outputs()[
+                    0].shape[1]
+                pred_function = functools.partial(
+                    onnx_predict, self.models[mdl_name])
                 self.model_prediction_function[mdl_name] = pred_function
 
             if inference_framework == "tflite":
                 if ".onnx" in mdl_path:
-                    raise ValueError("The tflite inference framework is selected, but onnx models were provided!")
+                    raise ValueError(
+                        "The tflite inference framework is selected, but onnx models were provided!")
 
-                self.models[mdl_name] = tflite.Interpreter(model_path=mdl_path, num_threads=1)
+                self.models[mdl_name] = tflite.Interpreter(
+                    model_path=mdl_path, num_threads=1)
                 self.models[mdl_name].allocate_tensors()
 
-                self.model_inputs[mdl_name] = self.models[mdl_name].get_input_details()[0]['shape'][1]
-                self.model_outputs[mdl_name] = self.models[mdl_name].get_output_details()[0]['shape'][1]
+                self.model_inputs[mdl_name] = self.models[mdl_name].get_input_details()[
+                    0]['shape'][1]
+                self.model_outputs[mdl_name] = self.models[mdl_name].get_output_details()[
+                    0]['shape'][1]
 
-                tflite_input_index = self.models[mdl_name].get_input_details()[0]['index']
-                tflite_output_index = self.models[mdl_name].get_output_details()[0]['index']
+                tflite_input_index = self.models[mdl_name].get_input_details()[
+                    0]['index']
+                tflite_output_index = self.models[mdl_name].get_output_details()[
+                    0]['index']
 
-                pred_function = functools.partial(tflite_predict, self.models[mdl_name], tflite_input_index, tflite_output_index)
+                pred_function = functools.partial(
+                    tflite_predict, self.models[mdl_name], tflite_input_index, tflite_output_index)
                 self.model_prediction_function[mdl_name] = pred_function
 
             if class_mapping_dicts and class_mapping_dicts[wakeword_models.index(mdl_path)].get(mdl_name, None):
-                self.class_mapping[mdl_name] = class_mapping_dicts[wakeword_models.index(mdl_path)]
+                self.class_mapping[mdl_name] = class_mapping_dicts[wakeword_models.index(
+                    mdl_path)]
             else:
-                self.class_mapping[mdl_name] = {str(i): str(i) for i in range(0, self.model_outputs[mdl_name])}
+                self.class_mapping[mdl_name] = {str(i): str(
+                    i) for i in range(0, self.model_outputs[mdl_name])}
 
             # Load custom verifier models
             if isinstance(custom_verifier_models, dict):
                 if custom_verifier_models.get(mdl_name, False):
-                    self.custom_verifier_models[mdl_name] = pickle.load(open(custom_verifier_models[mdl_name], 'rb'))
+                    self.custom_verifier_models[mdl_name] = pickle.load(
+                        open(custom_verifier_models[mdl_name], 'rb'))
 
             if len(self.custom_verifier_models.keys()) < len(custom_verifier_models.keys()):
                 raise ValueError(
@@ -205,7 +227,8 @@ class Model():
                 )
 
         # Create buffer to store frame predictions
-        self.prediction_buffer: DefaultDict[str, deque] = defaultdict(partial(deque, maxlen=30))
+        self.prediction_buffer: DefaultDict[str, deque] = defaultdict(
+            partial(deque, maxlen=30))
 
         # Initialize SpeexDSP noise canceller
         if enable_speex_noise_suppression:
@@ -220,7 +243,8 @@ class Model():
             self.vad = VAD()
 
         # Create AudioFeatures object
-        self.preprocessor = AudioFeatures(inference_framework=inference_framework, **kwargs)
+        self.preprocessor = AudioFeatures(
+            inference_framework=inference_framework, **kwargs)
 
     def get_parent_model_from_label(self, label):
         """Gets the parent model associated with a given prediction label"""
@@ -270,7 +294,8 @@ class Model():
         """
         # Check input data type
         if not isinstance(x, np.ndarray):
-            raise ValueError(f"The input audio data (x) must by a Numpy array, instead received an object of type {type(x)}.")
+            raise ValueError(
+                f"The input audio data (x) must by a Numpy array, instead received an object of type {type(x)}.")
 
         # Setup timing dict
         if timing:
@@ -280,7 +305,8 @@ class Model():
 
         # Get audio features (optionally with Speex noise suppression)
         if self.speex_ns:
-            n_prepared_samples = self.preprocessor(self._suppress_noise_with_speex(x))
+            n_prepared_samples = self.preprocessor(
+                self._suppress_noise_with_speex(x))
         else:
             n_prepared_samples = self.preprocessor(x)
 
@@ -300,8 +326,8 @@ class Model():
                     group_predictions.extend(
                         self.model_prediction_function[mdl](
                             self.preprocessor.get_features(
-                                    self.model_inputs[mdl],
-                                    start_ndx=-self.model_inputs[mdl] - i
+                                self.model_inputs[mdl],
+                                start_ndx=-self.model_inputs[mdl] - i
                             )
                         )
                     )
@@ -317,7 +343,8 @@ class Model():
                     else:
                         prediction = [[[0]]]
                 elif self.model_outputs[mdl] != 1:
-                    n_classes = max([int(i) for i in self.class_mapping[mdl].keys()])
+                    n_classes = max([int(i)
+                                    for i in self.class_mapping[mdl].keys()])
                     prediction = [[[0]*(n_classes+1)]]
 
             if self.model_outputs[mdl] == 1:
@@ -333,7 +360,8 @@ class Model():
                         parent_model = self.get_parent_model_from_label(cls)
                         if self.custom_verifier_models.get(parent_model, False):
                             verifier_prediction = self.custom_verifier_models[parent_model].predict_proba(
-                                self.preprocessor.get_features(self.model_inputs[mdl])
+                                self.preprocessor.get_features(
+                                    self.model_inputs[mdl])
                             )[0][-1]
                             predictions[cls] = verifier_prediction
 
@@ -352,18 +380,22 @@ class Model():
                 raise ValueError("Error! When using the `patience` argument, threshold "
                                  "values must be provided via the `threshold` argument!")
             if patience != {} and debounce_time > 0:
-                raise ValueError("Error! The `patience` and `debounce_time` arguments cannot be used together!")
+                raise ValueError(
+                    "Error! The `patience` and `debounce_time` arguments cannot be used together!")
             for mdl in predictions.keys():
                 parent_model = self.get_parent_model_from_label(mdl)
                 if predictions[mdl] != 0.0:
                     if parent_model in patience.keys():
-                        scores = np.array(self.prediction_buffer[mdl])[-patience[parent_model]:]
+                        scores = np.array(
+                            self.prediction_buffer[mdl])[-patience[parent_model]:]
                         if (scores >= threshold[parent_model]).sum() < patience[parent_model]:
                             predictions[mdl] = 0.0
                     elif debounce_time > 0:
                         if parent_model in threshold.keys():
-                            n_frames = int(np.ceil(debounce_time/(n_prepared_samples/16000)))
-                            recent_predictions = np.array(self.prediction_buffer[mdl])[-n_frames:]
+                            n_frames = int(
+                                np.ceil(debounce_time/(n_prepared_samples/16000)))
+                            recent_predictions = np.array(
+                                self.prediction_buffer[mdl])[-n_frames:]
                             if predictions[mdl] >= threshold[parent_model] and \
                                (recent_predictions >= threshold[parent_model]).sum() > 0:
                                 predictions[mdl] = 0.0
@@ -414,7 +446,8 @@ class Model():
             # Load audio clip as 16-bit PCM data
             with wave.open(clip, mode='rb') as f:
                 # Load WAV clip frames
-                data = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16)
+                data = np.frombuffer(f.readframes(
+                    f.getnframes()), dtype=np.int16)
         elif isinstance(clip, np.ndarray):
             data = clip
 
@@ -441,7 +474,7 @@ class Model():
             threshold: float = 0.5,
             return_type: str = "features",
             **kwargs
-            ):
+    ):
         """
         Gets predictions for the input audio data, and returns the audio features (embeddings)
         or audio data for all of the frames with a score above the `threshold` argument.
@@ -474,7 +507,8 @@ class Model():
             for lbl in predictions.keys():
                 if predictions[lbl] >= threshold:
                     mdl = self.get_parent_model_from_label(lbl)
-                    features = self.preprocessor.get_features(self.model_inputs[mdl])
+                    features = self.preprocessor.get_features(
+                        self.model_inputs[mdl])
                     if return_type == 'features':
                         positive_data[lbl].append(features)
                     if return_type == 'audio':

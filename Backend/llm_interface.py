@@ -62,4 +62,3 @@ if __name__ == "__main__":
         prompt = input("You: ")
         response = LLMInterface.get_abstraction_response(prompt)
         print(response)
-        # print("[cyan]Assistant: " + response)

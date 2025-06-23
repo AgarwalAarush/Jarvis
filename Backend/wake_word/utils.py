@@ -22,7 +22,6 @@ from multiprocessing import Process, Queue
 import time
 import logging
 from tqdm import tqdm
-import openwakeword
 from numpy.lib.format import open_memmap
 from typing import Union, List, Callable, Deque
 import requests
@@ -492,7 +491,7 @@ def bulk_predict(
         dict: A dictionary containing the predictions for each file, with the filepath as the key
     """
 
-    # Create openWakeWord model objects
+    # Create WakeWord model objects
     n_batches = max(1, len(file_paths)//ncpu)
     remainder = len(file_paths) % ncpu
     chunks = [file_paths[i:i+n_batches] for i in range(0, max(1, len(file_paths)-remainder), n_batches)]
@@ -505,8 +504,8 @@ def bulk_predict(
     q: Queue = Queue()
     for chunk in chunks:
         filtered_kwargs = {key: value for key, value in kwargs.items()
-                           if key in openwakeword.Model.__init__.__code__.co_varnames}
-        oww = openwakeword.Model(
+                           if key in wakeword.Model.__init__.__code__.co_varnames}
+        oww = wakeword.Model(
             wakeword_models=wakeword_models,
             inference_framework=inference_framework,
             **filtered_kwargs
@@ -560,7 +559,7 @@ def compute_features_from_generator(generator, n_total, clip_duration, output_fi
         None
     """
     # Function specific imports
-    from openwakeword.data import trim_mmap
+    from wakeword.data import trim_mmap
 
     # Create audio features object
     F = AudioFeatures(device=device)
@@ -627,15 +626,15 @@ def download_models(
         target_directory: str = os.path.join(pathlib.Path(__file__).parent.resolve(), "resources", "models")
         ):
     """
-    Download the specified models from the release assets in the openWakeWord GitHub repository.
-    Uses the official urls in the MODELS dictionary in openwakeword/__init__.py.
+    Download the specified models from the release assets in the WakeWord GitHub repository.
+    Uses the official urls in the MODELS dictionary in wakeword/__init__.py.
 
     Args:
         model_names (List[str]): The names of the models to download (e.g., hey_jarvis_v0.1). Both ONNX and
                                  tflite models will be downloaded. If not provided (the default),
                                  the latest versions of all models will be downloaded.
         target_directory (str): The directory to save the models to. Defaults to the install location
-                                of openWakeWord (i.e., the `resources/models` directory).
+                                of WakeWord (i.e., the `resources/models` directory).
     Returns:
         None
     """
@@ -645,19 +644,19 @@ def download_models(
     # Always download melspectrogram and embedding models, if they don't already exist
     if not os.path.exists(target_directory):
         os.makedirs(target_directory)
-    for feature_model in openwakeword.FEATURE_MODELS.values():
+    for feature_model in wakeword.FEATURE_MODELS.values():
         if not os.path.exists(os.path.join(target_directory, feature_model["download_url"].split("/")[-1])):
             download_file(feature_model["download_url"], target_directory)
             download_file(feature_model["download_url"].replace(".tflite", ".onnx"), target_directory)
 
     # Always download VAD models, if they don't already exist
-    for vad_model in openwakeword.VAD_MODELS.values():
+    for vad_model in wakeword.VAD_MODELS.values():
         if not os.path.exists(os.path.join(target_directory, vad_model["download_url"].split("/")[-1])):
             download_file(vad_model["download_url"], target_directory)
 
     # Get all model urls
-    official_model_urls = [i["download_url"] for i in openwakeword.MODELS.values()]
-    official_model_names = [i["download_url"].split("/")[-1] for i in openwakeword.MODELS.values()]
+    official_model_urls = [i["download_url"] for i in wakeword.MODELS.values()]
+    official_model_names = [i["download_url"].split("/")[-1] for i in wakeword.MODELS.values()]
 
     if model_names != []:
         for model_name in model_names:

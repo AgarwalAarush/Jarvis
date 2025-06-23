@@ -1,0 +1,32 @@
+# Core Audio Processing & Speech Recognition
+whisper>=20231117
+sounddevice>=0.4.6
+numpy>=1.21.0
+
+# Machine Learning & AI
+ollama>=0.1.0
+langchain-ollama>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.1.0
+
+# Text-to-Speech Services
+cartesia>=0.1.0
+google-cloud-texttospeech>=2.16.0
+ffmpeg-python>=0.2.0
+
+# Natural Language Processing
+nltk>=3.8
+
+# Search & Web
+googlesearch-python>=1.2.3
+
+# Wake Word Detection
+onnxruntime>=1.15.0
+tflite-runtime>=2.13.0; sys_platform != "darwin"  # Optional, not available on macOS
+speexdsp-ns>=0.1.0  # Optional, for noise suppression
+
+# Utilities
+python-dotenv>=1.0.0
+rich>=13.0.0
+tqdm>=4.65.0
+requests>=2.31.0 

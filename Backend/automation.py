@@ -1,76 +1,232 @@
-import os
+import json
 import subprocess
 import webbrowser
+from llm_client import LLMClient
 from search import SearchInterface
 from file_interaction import FileSystem
 
-class AutomationClient:
+class SystemAutomationClient:
 
     def __init__(self, config: dict):
         """
-        Initialize the AutomationClient with a configuration dictionary.
-
-        Args:
-            config: A dictionary containing configuration settings
+        Description: initialize the AutomationClient with a configuration dictionary.
+        Args: config: A dictionary containing configuration settings
         """
         self.VOLUME_STEP = config.get('VOLUME_STEP', 20)
         self.BRIGHTNESS_UP_KEYCODE = 144
         self.BRIGHTNESS_DOWN_KEYCODE = 145
 
+        self.FUNCS = {
+            "open_url": self.open_url,
+            "run_command": self.run_command,
+            "increase_volume": self.increase_volume,
+            "decrease_volume": self.decrease_volume,
+            "mute_volume": self.mute_volume,
+            "unmute_volume": self.unmute_volume,
+            "increase_brightness": self.increase_brightness,
+            "decrease_brightness": self.decrease_brightness,
+            "zero_brightness": self.zero_brightness,
+            "full_brightness": self.full_brightness,
+            "open_app": self.open_app,
+            "close_app": self.close_app,
+            "get_spotify_track_info": self.get_spotify_track_info,
+            "play_spotify": self.play_spotify
+        }
+
+        self.tools_description = "\n".join([f"{name}: {func.__doc__}" for name, func in self.FUNCS.items()])
+
+        self.command_processing_prompt = """
+        You are an intelligent assistant that can call tools to help users. Below is a list of available tools:
+
+        {tools_description}\n
+        """.format(tools_description=self.tools_description)
+
+        self.command_processing_prompt += """
+        When a user asks something, decide which tool (if any) should be called, and return the tool name and arguments in the following format:
+
+        {
+          "tool_name": "<name>",
+          "arguments": {
+            ... key-value pairs ...
+          }
+        }
+
+        If no tool applies, return:
+        {
+          "tool_name": null,
+          "arguments": {}
+        }        
+        """
+
+    def _process_command(self, command: str, text: str = ""):
+        """
+        Tool: "_process_command"
+        Description: Processes a command to determine if it is a system command (like volume or brightness control) and executes it if applicable.
+        Args:
+            command: The command to process.
+            text: The original text input from the user.
+        """
+        print(f"Processing command: {command} with text: {text}")
+        try:
+            llm_prompt = self.command_processing_prompt + "\n The following is the user command and prompt: " + command + " " + text
+            tool_call = LLMClient.get_response(llm_prompt)
+            try:
+                json_str = tool_call[tool_call.find("{") : tool_call.rfind("}") + 1]
+                tool_data = json.loads(json_str)
+            except (ValueError, json.JSONDecodeError):
+                print(f"Error parsing JSON: {tool_call}")
+                return "Unable to understand system tool call"
+            
+            print(tool_data)
+            tool_name = tool_data.get("tool_name")
+            if tool_name:
+                tool_func = self.FUNCS.get(tool_name)
+                if tool_func:
+                    result = tool_func(**tool_data.get("arguments", {}))
+                    return result
+                else:
+                    return "Tool not found"
+            else:
+                return "Tool name not found"
+        except Exception as e:
+            return f"Error executing system command: {e}"
+
+
     def open_url(self, url: str):
+        """
+        Tool: "open_url"
+        Description: Opens a URL in the default web browser.
+        Args:
+            url: The URL to open.
+        """
         webbrowser.open(url)
+        return "Opened URL"
 
     def run_command(self, command: str):
+        """
+        Tool: "run_command"
+        Description: Runs a shell command.
+        Args:
+            command: The shell command to run.
+        """
         subprocess.run(command, shell=True)
+        return "Command executed"
 
     def increase_volume(self):
+        """
+        Tool: "increase_volume"
+        Description: Increases the system volume by a predefined step.
+        Args:
+            None
+        """
         script = f"set volume output volume (output volume of (get volume settings) + {self.VOLUME_STEP})"
         subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Volume increased"
 
     def decrease_volume(self):
+        """
+        Tool: "decrease_volume"
+        Description: Decreases the system volume by a predefined step.
+        Args:
+            None
+        """
         script = f"set volume output volume (output volume of (get volume settings) - {self.VOLUME_STEP})"
         subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Volume decreased"
+
+    def mute_volume(self):
+        """
+        Tool: "mute_volume"
+        Description: Mutes the system volume.
+        Args:
+            None
+        """
+        script = "set volume output muted true"
+        subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Volume muted"
+
+    def unmute_volume(self):
+        """
+        Tool: "unmute_volume"
+        Description: Unmutes the system volume.
+        Args:
+            None
+        """
+        script = "set volume output muted false"
+        subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Volume unmuted"
 
     def increase_brightness(self):
         """
-        Increases screen brightness by simulating the brightness up key press.
-        May require Accessibility permissions and might only affect the primary display.
+        Tool: "increase_brightness"
+        Description: Increases the screen brightness by simulating a key press.
+        Args:
+            None
         """
-        print("Increasing brightness (simulating key press)...")
         script = f'tell application "System Events" to key code {self.BRIGHTNESS_UP_KEYCODE}'
         subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Brightness increased"
 
     def decrease_brightness(self):
         """
-        Decreases screen brightness by simulating the brightness down key press.
-        May require Accessibility permissions and might only affect the primary display.
+        Tool: "decrease_brightness"
+        Description: Decreases the screen brightness by simulating a key press.
+        Args:
+            None
         """
-        print("Decreasing brightness (simulating key press)...")
         script = f'tell application "System Events" to key code {self.BRIGHTNESS_DOWN_KEYCODE}'
         subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Brightness decreased"
+
+    def zero_brightness(self):
+        """
+        Tool: "zero_brightness"
+        Description: Sets the screen brightness to zero.
+        Args:
+            None
+        """
+        script = f'tell application "System Events" to key code {self.BRIGHTNESS_DOWN_KEYCODE}'
+        for _ in range(10): subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Brightness set to 0"
+
+    def full_brightness(self):
+        """
+        Tool: "full_brightness"
+        Description: Sets the screen brightness to 100%.
+        Args:
+            None
+        """
+        script = "set brightness 100"
+        subprocess.run(['osascript', '-e', script], capture_output=True)
+        return "Brightness set to 100"
 
     def open_app(self, app_name):
         """
-        Opens a macOS application.
-        Provide the application name (e.g., "TextEdit", "Google Chrome")
-        or the full path to the .app bundle.
+        Tool: "open_app"
+        Description: Opens a macOS application.        
+        Args:
+            app_name: The name of the application to open (e.g., "Safari", "Terminal").
         """
         print(f"Attempting to open '{app_name}'...")
         try:
             # Using '-a' is generally preferred for finding apps by name
             subprocess.run(['open', '-a', app_name], check=True)
             print(f"Successfully launched or switched to '{app_name}'.")
+            return f"Opened {app_name}"
         except subprocess.CalledProcessError as e:
             print(f"Error opening '{app_name}': {e}. Is it installed and named correctly?")
         except FileNotFoundError:
             print("Error: 'open' command not found. Is this a macOS system?")
         except Exception as e:
             print(f"An unexpected error occurred opening {app_name}: {e}")
+        return f"Failed to open {app_name}"
 
     def close_app(self, app_name):
         """
-        Closes (quits) a running macOS application.
-        Provide the exact application name (case-sensitive usually matters for AppleScript).
+        Tool: "close_app"
+        Description: Closes (quits) a running macOS application.
+        Args:
+            app_name: The name of the application to close (e.g., "Safari", "Terminal").
         """
         print(f"Attempting to close '{app_name}'...")
         # AppleScript usually doesn't want the .app extension
@@ -81,23 +237,17 @@ class AutomationClient:
         result = subprocess.run(['osascript', '-e', script], capture_output=True)
         if result.returncode == 0:
             print(f"Sent quit command to '{app_name}'.")
+            return f"Closed {app_name}"
         else:
             print(f"Failed to quit '{app_name}' with error: {result.stderr}")
+            return f"Failed to close {app_name}"
 
-    def run_terminal_command(self, command: str):
-        """
-        Runs a command in the macOS Terminal.
-        """
-        print(f"Terminal Commands TBI")
-        # print(f"Running command in terminal: {command}")
-        # subprocess.run(['osascript', '-e', f'tell application "Terminal" to do script "{command}"'])
-        # print("Command executed.")
-
-    
     def get_spotify_track_info(self):
         """
-        Retrieves the currently playing track's name and artist from Spotify.
-        Returns a string in the format "Name - Artist" or an error message.
+        Tool: "get_spotify_track_info"
+        Description: retrieves the currently playing track's name and artist from Spotify.
+        Args:
+            None
         """
         script = '''
         tell application "Spotify"
@@ -121,8 +271,15 @@ class AutomationClient:
 
     def play_spotify(self, song: str, trial: int = 1):
         """
-        Play Spotify using AppleScript.
+        Tool: "play_spotify"
+        Description: play Spotify using AppleScript.
+        Args:
+            song: The name of the song to play.
+            trial [Optional]: The number of trials to attempt if the song is not found.
         """
+
+        # Sanity check
+        trial = min(max(trial, 1), 3)  # Limit trials to between 1 and 3
 
         track_id = None
 
@@ -182,11 +339,10 @@ class AutomationClient:
                 if trial == 1:
                     print("Trying again...")
                     self.play_spotify(song, 2)
+                return "Failed to play song"
             
 if __name__ == "__main__":
-    auto = AutomationClient({})
-    # while True:
-    #     song = input("Enter song name: ")
-    #     auto.play_spotify(song)
-    auto.decrease_brightness()
-    
+    auto = SystemAutomationClient({})
+    print("Running...")
+    auto._process_command("play", "play Viva la Vida by Coldplay")
+    # auto.zero_brightness()
