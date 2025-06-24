@@ -1,9 +1,10 @@
 import os
 from dotenv import load_dotenv
 from llm_client import LLMClient
-from search import SearchInterface
+from search.search import SearchInterface
 from file_interaction import FileSystem
 from context import ContextClient, MemoryClient
+
 
 class LLMInterface:
     @staticmethod
@@ -12,9 +13,11 @@ class LLMInterface:
         load_dotenv()
 
         abstraction_prompt = FileSystem.retrieve_txt("prompts/abstraction.txt")
-        functions = ["general", "open", "close", "exit", "play", "generate image", "system", "content", "google search", "youtube search", "spotify search", "terminal command"]
+        functions = ["general", "open", "close", "exit", "play", "generate image", "system",
+                     "content", "google search", "youtube search", "spotify search", "terminal command"]
 
-        response = LLMClient.get_response(abstraction_prompt + "\n\n" + "user prompt: " + prompt)
+        response = LLMClient.get_response(
+            abstraction_prompt + "\n\n" + "user prompt: " + prompt)
 
         # remove newlines, split responses into individual tasks
         response = response.replace("\n", "")
@@ -29,9 +32,9 @@ class LLMInterface:
             for keyword in functions:
                 if task.startswith(keyword):
                     result.append(task)
-                    
+
         return result
-    
+
     @staticmethod
     def get_live_chatbot_response(prompt: str) -> str:
         # retrieve memory and realtime prompt
@@ -47,15 +50,16 @@ class LLMInterface:
         """
 
         search_results = SearchInterface.google_search(prompt)
-        print(search_results)
-        
+
         # generate response
-        response = LLMClient.get_response(realtime_prompt + "\n\n" + context + "\n\n" + "This is the user prompt: " + prompt + "\n\n" + "Search results: " + "\n\n" + "\n\n".join(search_results))
+        response = LLMClient.get_response(realtime_prompt + "\n\n" + context + "\n\n" + "This is the user prompt: " +
+                                          prompt + "\n\n" + "Search results: " + "\n\n" + "\n\n".join(search_results))
 
         # update memory
         MemoryClient.update_memory(prompt, response)
 
         return response
+
 
 if __name__ == "__main__":
     while True:

@@ -31,6 +31,7 @@ class LLMClient:
         Returns:
             The response from the LLM.
         """
+        # TODO: Implement complexity, currently broken
         if complexity == "low":
             model_name = LLMClient.lowest_complexity_model()
         elif complexity == "high":
@@ -54,18 +55,20 @@ class LLMClient:
         """
         return json.loads(ollama.list().model_dump_json())
     
-    def highest_complexity_model(self) -> str:
+    @staticmethod
+    def highest_complexity_model() -> str:
         """
         Returns the name of the highest complexity model.
         """
-        models = self.list_models()['models']
+        models = LLMClient.list_models()['models']
         models.sort(key=lambda x: x['size'], reverse=True)
         return models[0]['name']
     
-    def lowest_complexity_model(self) -> str:
+    @staticmethod
+    def lowest_complexity_model() -> str:
         """
         Returns the name of the lowest complexity model.
         """
-        models = self.list_models()['models']
+        models = LLMClient.list_models()['models']
         models.sort(key=lambda x: x['size'])
         return models[0]['name']

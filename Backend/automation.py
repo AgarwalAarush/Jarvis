@@ -2,8 +2,9 @@ import json
 import subprocess
 import webbrowser
 from llm_client import LLMClient
-from search import SearchInterface
+from search.search import SearchInterface
 from file_interaction import FileSystem
+
 
 class SystemAutomationClient:
 
@@ -30,10 +31,12 @@ class SystemAutomationClient:
             "open_app": self.open_app,
             "close_app": self.close_app,
             "get_spotify_track_info": self.get_spotify_track_info,
-            "play_spotify": self.play_spotify
+            "play_spotify": self.play_spotify,
+            "google_search": self.google_search
         }
 
-        self.tools_description = "\n".join([f"{name}: {func.__doc__}" for name, func in self.FUNCS.items()])
+        self.tools_description = "\n".join(
+            [f"{name}: {func.__doc__}" for name, func in self.FUNCS.items()])
 
         self.command_processing_prompt = """
         You are an intelligent assistant that can call tools to help users. Below is a list of available tools:
@@ -58,25 +61,25 @@ class SystemAutomationClient:
         }        
         """
 
-    def _process_command(self, command: str, text: str = ""):
+    def _process_command(self, command: str):
         """
         Tool: "_process_command"
         Description: Processes a command to determine if it is a system command (like volume or brightness control) and executes it if applicable.
         Args:
             command: The command to process.
-            text: The original text input from the user.
         """
-        print(f"Processing command: {command} with text: {text}")
         try:
-            llm_prompt = self.command_processing_prompt + "\n The following is the user command and prompt: " + command + " " + text
+            llm_prompt = self.command_processing_prompt + \
+                "\n The following is the user command and prompt: " + command
             tool_call = LLMClient.get_response(llm_prompt)
             try:
-                json_str = tool_call[tool_call.find("{") : tool_call.rfind("}") + 1]
+                json_str = tool_call[tool_call.find(
+                    "{"): tool_call.rfind("}") + 1]
                 tool_data = json.loads(json_str)
             except (ValueError, json.JSONDecodeError):
                 print(f"Error parsing JSON: {tool_call}")
                 return "Unable to understand system tool call"
-            
+
             print(tool_data)
             tool_name = tool_data.get("tool_name")
             if tool_name:
@@ -90,7 +93,6 @@ class SystemAutomationClient:
                 return "Tool name not found"
         except Exception as e:
             return f"Error executing system command: {e}"
-
 
     def open_url(self, url: str):
         """
@@ -186,7 +188,8 @@ class SystemAutomationClient:
             None
         """
         script = f'tell application "System Events" to key code {self.BRIGHTNESS_DOWN_KEYCODE}'
-        for _ in range(10): subprocess.run(['osascript', '-e', script], capture_output=True)
+        for _ in range(10):
+            subprocess.run(['osascript', '-e', script], capture_output=True)
         return "Brightness set to 0"
 
     def full_brightness(self):
@@ -214,7 +217,8 @@ class SystemAutomationClient:
             print(f"Successfully launched or switched to '{app_name}'.")
             return f"Opened {app_name}"
         except subprocess.CalledProcessError as e:
-            print(f"Error opening '{app_name}': {e}. Is it installed and named correctly?")
+            print(
+                f"Error opening '{app_name}': {e}. Is it installed and named correctly?")
         except FileNotFoundError:
             print("Error: 'open' command not found. Is this a macOS system?")
         except Exception as e:
@@ -234,7 +238,8 @@ class SystemAutomationClient:
             app_name = app_name[:-4]
 
         script = f'quit app "{app_name}"'
-        result = subprocess.run(['osascript', '-e', script], capture_output=True)
+        result = subprocess.run(
+            ['osascript', '-e', script], capture_output=True)
         if result.returncode == 0:
             print(f"Sent quit command to '{app_name}'.")
             return f"Closed {app_name}"
@@ -260,7 +265,8 @@ class SystemAutomationClient:
             end if
         end tell
         '''
-        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        result = subprocess.run(
+            ['osascript', '-e', script], capture_output=True, text=True)
         if result.returncode == 0:
             info = result.stdout.strip()
             print("Current track info:", info)
@@ -304,16 +310,18 @@ class SystemAutomationClient:
             track_id_found = False
             for i in range(3):
                 # search song, retrieve url
-                search_results = SearchInterface.google_search("spotify song & lyrics track for " + song)
+                search_results = SearchInterface.google_search(
+                    "spotify song & lyrics track for " + song)
                 if search_results:
                     search_result = search_results[i]
                     # first_result is in the format, "URL: <url> Title: <title> Description: <description>\n\n" retrieve the url
                     url = search_result.split("URL: ")[1].split("\n")[0]
                     # Extract track ID from the Spotify URL
                     if "spotify.com/track/" in url:
-                        track_id = url.split("spotify.com/track/")[1].split("?")[0].split()[0].strip()
+                        track_id = url.split(
+                            "spotify.com/track/")[1].split("?")[0].split()[0].strip()
                         print(f"Playing Spotify track ID: {track_id}")
-                        
+
                     if track_id:
                         track_id_found = True
                         # Use AppleScript to control Spotify
@@ -340,7 +348,19 @@ class SystemAutomationClient:
                     print("Trying again...")
                     self.play_spotify(song, 2)
                 return "Failed to play song"
-            
+
+    def google_search(self, query: str):
+        """
+        Tool: "google_search"
+        Description: searches Google for a query.
+        Args:
+            query: The query to search for.
+        """
+        result = SearchInterface.google_search(query)
+        print(result)
+        return result
+
+
 if __name__ == "__main__":
     auto = SystemAutomationClient({})
     print("Running...")

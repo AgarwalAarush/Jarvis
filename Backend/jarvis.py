@@ -14,13 +14,6 @@ from rich.console import Console
 from rich.status import Status
 from dotenv import load_dotenv
 
-# Add wake_word directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'wake_word'))
-
-# Import wake word model
-
-# Import existing components
-
 # Load environment variables
 load_dotenv()
 
@@ -34,7 +27,7 @@ CHANNELS = 1
 DTYPE = np.int16
 
 # Wake word detection configuration
-WAKE_WORD_CONFIDENCE_THRESHOLD = 0.99
+WAKE_WORD_CONFIDENCE_THRESHOLD = 0.95
 SILENCE_THRESHOLD = 0.005  # Lowered RMS threshold for better sensitivity
 SILENCE_DURATION_BLOCKS = 25  # Reduced to ~2 seconds for faster response
 KEYWORD_BUFFER_DURATION = 2.0  # seconds
@@ -276,7 +269,9 @@ class VoiceAssistant:
             self.console.print(f"[yellow]You: {transcribed_text}")
 
             # Process with LLM
-            self._process_command(transcribed_text)
+            result = self.system_automation._process_command(transcribed_text)
+            # TODO: remove this
+            self._speak_response(result)
 
         except Exception as e:
             self.console.print(f"[red]Error processing recording: {e}")
