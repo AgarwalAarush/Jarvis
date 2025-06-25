@@ -25,6 +25,13 @@ onnxruntime>=1.15.0
 tflite-runtime>=2.13.0; sys_platform != "darwin"  # Optional, not available on macOS
 speexdsp-ns>=0.1.0  # Optional, for noise suppression
 
+# Web API & Communication
+flask>=2.3.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+python-socketio>=5.8.0
+eventlet>=0.33.0  # For WebSocket support
+
 # Utilities
 python-dotenv>=1.0.0
 rich>=13.0.0

@@ -6,30 +6,43 @@
 //
 
 import SwiftUI
-import SwiftData
+import CoreData
 
 @main
 struct JarvisApp: App {
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var dataController = DataController()
+    @StateObject private var stateManager = JarvisStateManager.shared
     
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
-            ContentView().frame(minWidth: 500, minHeight: 700)
+            ContentView()
+                .frame(minWidth: 500, minHeight: 700)
+                .environment(\.managedObjectContext, dataController.container.viewContext)
+                .environmentObject(dataController)
+                .environmentObject(stateManager)
         }
-        .modelContainer(sharedModelContainer)
+        .commands {
+            // Add custom menu commands
+            CommandGroup(after: .appInfo) {
+                Button("Settings") {
+                    stateManager.showSettings = true
+                }
+                .keyboardShortcut(",", modifiers: .command)
+                
+                Divider()
+                
+                Button("Switch to Voice Mode") {
+                    stateManager.switchMode(to: .voice)
+                }
+                .keyboardShortcut("v", modifiers: [.command, .shift])
+                
+                Button("Switch to Chat Mode") {
+                    stateManager.switchMode(to: .chat)
+                }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+            }
+        }
     }
 }
