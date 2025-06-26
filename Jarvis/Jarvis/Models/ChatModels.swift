@@ -53,6 +53,7 @@ struct MessageModel: Identifiable, Codable {
     }
 }
 
+// ConversationModel is used as Conversation for API purposes via typealias in APIModels.swift
 struct ConversationModel: Identifiable, Codable {
     let id: UUID
     var title: String
@@ -91,31 +92,15 @@ struct ChatSettings: Codable {
     var maxMessages: Int = 100
 }
 
-// MARK: - Search Models
-struct SearchResult: Identifiable, Codable {
-    let id: UUID
-    let title: String
-    let content: String
-    let timestamp: Date
-    let type: SearchResultType
-    let relevance: Double
-}
-
-enum SearchResultType: String, Codable {
-    case message
-    case conversation
-    case chat
-}
-
 // MARK: - Export Models
 struct ExportOptions {
     var includeMetadata: Bool = true
-    var format: ExportFormat = .json
+    var format: ExportFormatViewModel = .json
     var dateRange: DateInterval?
     var includeAttachments: Bool = false
 }
 
-enum ExportFormat: String, Codable {
+enum ExportFormatViewModel: String, Codable {
     case json
     case markdown
     case plainText

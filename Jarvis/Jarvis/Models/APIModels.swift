@@ -1,5 +1,15 @@
 import Foundation
 
+// MARK: - API Connection Status
+
+enum ConnectionStatus: Equatable, Codable {
+    case disconnected
+    case connecting
+    case connected
+    case reconnecting
+    case error(String)
+}
+
 // MARK: - API Request Models
 struct ChatRequest: Codable {
     let message: String
@@ -100,9 +110,19 @@ struct StreamingChatResponse: Codable {
 }
 
 struct ConversationsResponse: Codable {
-    let conversations: [ConversationModel]
+    let conversations: [ConversationDTO]
     let totalCount: Int
     let hasMore: Bool
+}
+
+struct SearchResult: Codable, Identifiable {
+    let id: UUID
+    let type: String
+    let title: String
+    let content: String
+    let conversationId: UUID?
+    let timestamp: Date
+    let relevance: Double
 }
 
 struct SearchResponse: Codable {
@@ -150,6 +170,68 @@ struct APIError: Codable, LocalizedError {
     var errorDescription: String? {
         return message
     }
+}
+
+extension APIError {
+    static let unknown = APIError(
+        code: "UNKNOWN_ERROR",
+        message: "An unknown error occurred",
+        details: nil,
+        timestamp: Date()
+    )
+    
+    static let invalidData = APIError(
+        code: "INVALID_DATA",
+        message: "Invalid data received",
+        details: nil,
+        timestamp: Date()
+    )
+    
+    static let authenticationError = APIError(
+        code: "AUTHENTICATION_ERROR",
+        message: "Authentication failed",
+        details: nil,
+        timestamp: Date()
+    )
+    
+    static let rateLimitExceeded = APIError(
+        code: "RATE_LIMIT_EXCEEDED",
+        message: "Rate limit exceeded",
+        details: nil,
+        timestamp: Date()
+    )
+    
+    static func serverError(_ statusCode: Int, _ message: String) -> APIError {
+        return APIError(
+            code: "SERVER_ERROR",
+            message: message,
+            details: "HTTP Status: \(statusCode)",
+            timestamp: Date()
+        )
+    }
+    
+    static let timeout = APIError(
+        code: "TIMEOUT",
+        message: "Request timed out",
+        details: nil,
+        timestamp: Date()
+    )
+    
+    static func networkError(_ error: Error) -> APIError {
+        return APIError(
+            code: "NETWORK_ERROR",
+            message: "Network error occurred",
+            details: error.localizedDescription,
+            timestamp: Date()
+        )
+    }
+    
+    static let invalidResponse = APIError(
+        code: "INVALID_RESPONSE",
+        message: "Invalid response received",
+        details: nil,
+        timestamp: Date()
+    )
 }
 
 enum APIErrorType: String, CaseIterable {
@@ -268,4 +350,21 @@ enum CodableValue: Codable {
             try container.encodeNil()
         }
     }
+}
+
+enum ExportFormat: String, Codable, CaseIterable {
+    case json
+    case markdown
+    case text
+    case csv
+}
+
+struct SystemStatus: Codable {
+    let status: String
+    let uptime: TimeInterval
+    let version: String
+    let models: [String]
+    let activeConnections: Int
+    let memoryUsage: Double
+    let cpuUsage: Double
 } 

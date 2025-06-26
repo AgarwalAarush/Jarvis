@@ -24,8 +24,8 @@ struct ChatView: View {
         .onAppear {
             viewModel.loadChat(id: stateManager.currentChatId)
         }
-        .onChange(of: stateManager.currentChatId) { newChatId in
-            viewModel.loadChat(id: newChatId)
+        .onChange(of: stateManager.currentChatId) { oldValue, newValue in
+            viewModel.loadChat(id: newValue)
         }
     }
     
@@ -69,7 +69,7 @@ struct ChatView: View {
                 }
                 .padding(.vertical)
             }
-            .onChange(of: viewModel.messages.count) { _ in
+            .onChange(of: viewModel.messages.count) { oldValue, newValue in
                 if let lastMessage = viewModel.messages.last {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         scrollView.scrollTo(lastMessage.id, anchor: .bottom)

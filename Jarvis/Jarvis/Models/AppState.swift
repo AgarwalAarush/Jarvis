@@ -32,7 +32,7 @@ class JarvisStateManager: ObservableObject {
     @Published var selectedTab: TabSelection? = .chat
     
     // MARK: - System State
-    @Published var systemStatus: SystemStatus = .unknown
+    @Published var systemStatus: SystemStatusViewModel = .unknown
     @Published var availableModels: [ModelsResponse.ModelInfo] = []
     @Published var currentModel: String = "default"
     
@@ -146,29 +146,7 @@ enum VoiceState: Equatable {
     case error(String)
 }
 
-enum ConnectionStatus: Equatable {
-    case disconnected
-    case connecting
-    case connected
-    case reconnecting
-    case error(String)
-    
-    static func == (lhs: ConnectionStatus, rhs: ConnectionStatus) -> Bool {
-        switch (lhs, rhs) {
-        case (.disconnected, .disconnected),
-             (.connecting, .connecting),
-             (.connected, .connected),
-             (.reconnecting, .reconnecting):
-            return true
-        case let (.error(a), .error(b)):
-            return a == b
-        default:
-            return false
-        }
-    }
-}
-
-enum SystemStatus {
+enum SystemStatusViewModel {
     case unknown
     case healthy
     case warning
