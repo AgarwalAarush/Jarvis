@@ -2,10 +2,11 @@
 //  JarvisTests.swift
 //  JarvisTests
 //
-//  Created by Aarush Agarwal on 3/22/25.
+//  Created by Aarush Agarwal on 6/25/25.
 //
 
 import Testing
+@testable import Jarvis
 
 struct JarvisTests {
 

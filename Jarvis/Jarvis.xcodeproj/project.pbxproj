@@ -7,53 +7,40 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		9B6808CE2D8F964A008C4AA5 /* PBXContainerItemProxy */ = {
+		9B6751BC2E0CF6A40042DE6A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 9B6808B12D8F9648008C4AA5 /* Project object */;
+			containerPortal = 9B6751A02E0CF6A20042DE6A /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 9B6808B82D8F9648008C4AA5;
+			remoteGlobalIDString = 9B6751A72E0CF6A20042DE6A;
 			remoteInfo = Jarvis;
 		};
-		9B6808D82D8F964A008C4AA5 /* PBXContainerItemProxy */ = {
+		9B6751C62E0CF6A40042DE6A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 9B6808B12D8F9648008C4AA5 /* Project object */;
+			containerPortal = 9B6751A02E0CF6A20042DE6A /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 9B6808B82D8F9648008C4AA5;
+			remoteGlobalIDString = 9B6751A72E0CF6A20042DE6A;
 			remoteInfo = Jarvis;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9B6808B92D8F9648008C4AA5 /* Jarvis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jarvis.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9B6808CD2D8F964A008C4AA5 /* JarvisTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JarvisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9B6808D72D8F964A008C4AA5 /* JarvisUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JarvisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B6751A82E0CF6A20042DE6A /* Jarvis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jarvis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B6751BB2E0CF6A40042DE6A /* JarvisTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JarvisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B6751C52E0CF6A40042DE6A /* JarvisUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JarvisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9B6808DF2D8F964A008C4AA5 /* Exceptions for "Jarvis" folder in "Jarvis" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 9B6808B82D8F9648008C4AA5 /* Jarvis */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9B6808BB2D8F9648008C4AA5 /* Jarvis */ = {
+		9B6751AA2E0CF6A20042DE6A /* Jarvis */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				9B6808DF2D8F964A008C4AA5 /* Exceptions for "Jarvis" folder in "Jarvis" target */,
-			);
 			path = Jarvis;
 			sourceTree = "<group>";
 		};
-		9B6808D02D8F964A008C4AA5 /* JarvisTests */ = {
+		9B6751BE2E0CF6A40042DE6A /* JarvisTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JarvisTests;
 			sourceTree = "<group>";
 		};
-		9B6808DA2D8F964A008C4AA5 /* JarvisUITests */ = {
+		9B6751C82E0CF6A40042DE6A /* JarvisUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JarvisUITests;
 			sourceTree = "<group>";
@@ -61,21 +48,21 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		9B6808B62D8F9648008C4AA5 /* Frameworks */ = {
+		9B6751A52E0CF6A20042DE6A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808CA2D8F964A008C4AA5 /* Frameworks */ = {
+		9B6751B82E0CF6A40042DE6A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808D42D8F964A008C4AA5 /* Frameworks */ = {
+		9B6751C22E0CF6A40042DE6A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -85,22 +72,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		9B6808B02D8F9648008C4AA5 = {
+		9B67519F2E0CF6A20042DE6A = {
 			isa = PBXGroup;
 			children = (
-				9B6808BB2D8F9648008C4AA5 /* Jarvis */,
-				9B6808D02D8F964A008C4AA5 /* JarvisTests */,
-				9B6808DA2D8F964A008C4AA5 /* JarvisUITests */,
-				9B6808BA2D8F9648008C4AA5 /* Products */,
+				9B6751AA2E0CF6A20042DE6A /* Jarvis */,
+				9B6751BE2E0CF6A40042DE6A /* JarvisTests */,
+				9B6751C82E0CF6A40042DE6A /* JarvisUITests */,
+				9B6751A92E0CF6A20042DE6A /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		9B6808BA2D8F9648008C4AA5 /* Products */ = {
+		9B6751A92E0CF6A20042DE6A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9B6808B92D8F9648008C4AA5 /* Jarvis.app */,
-				9B6808CD2D8F964A008C4AA5 /* JarvisTests.xctest */,
-				9B6808D72D8F964A008C4AA5 /* JarvisUITests.xctest */,
+				9B6751A82E0CF6A20042DE6A /* Jarvis.app */,
+				9B6751BB2E0CF6A40042DE6A /* JarvisTests.xctest */,
+				9B6751C52E0CF6A40042DE6A /* JarvisUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,134 +95,134 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9B6808B82D8F9648008C4AA5 /* Jarvis */ = {
+		9B6751A72E0CF6A20042DE6A /* Jarvis */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B6808E02D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "Jarvis" */;
+			buildConfigurationList = 9B6751CF2E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "Jarvis" */;
 			buildPhases = (
-				9B6808B52D8F9648008C4AA5 /* Sources */,
-				9B6808B62D8F9648008C4AA5 /* Frameworks */,
-				9B6808B72D8F9648008C4AA5 /* Resources */,
+				9B6751A42E0CF6A20042DE6A /* Sources */,
+				9B6751A52E0CF6A20042DE6A /* Frameworks */,
+				9B6751A62E0CF6A20042DE6A /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9B6808BB2D8F9648008C4AA5 /* Jarvis */,
+				9B6751AA2E0CF6A20042DE6A /* Jarvis */,
 			);
 			name = Jarvis;
 			packageProductDependencies = (
 			);
 			productName = Jarvis;
-			productReference = 9B6808B92D8F9648008C4AA5 /* Jarvis.app */;
+			productReference = 9B6751A82E0CF6A20042DE6A /* Jarvis.app */;
 			productType = "com.apple.product-type.application";
 		};
-		9B6808CC2D8F964A008C4AA5 /* JarvisTests */ = {
+		9B6751BA2E0CF6A40042DE6A /* JarvisTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B6808E52D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "JarvisTests" */;
+			buildConfigurationList = 9B6751D22E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "JarvisTests" */;
 			buildPhases = (
-				9B6808C92D8F964A008C4AA5 /* Sources */,
-				9B6808CA2D8F964A008C4AA5 /* Frameworks */,
-				9B6808CB2D8F964A008C4AA5 /* Resources */,
+				9B6751B72E0CF6A40042DE6A /* Sources */,
+				9B6751B82E0CF6A40042DE6A /* Frameworks */,
+				9B6751B92E0CF6A40042DE6A /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				9B6808CF2D8F964A008C4AA5 /* PBXTargetDependency */,
+				9B6751BD2E0CF6A40042DE6A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				9B6808D02D8F964A008C4AA5 /* JarvisTests */,
+				9B6751BE2E0CF6A40042DE6A /* JarvisTests */,
 			);
 			name = JarvisTests;
 			packageProductDependencies = (
 			);
 			productName = JarvisTests;
-			productReference = 9B6808CD2D8F964A008C4AA5 /* JarvisTests.xctest */;
+			productReference = 9B6751BB2E0CF6A40042DE6A /* JarvisTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9B6808D62D8F964A008C4AA5 /* JarvisUITests */ = {
+		9B6751C42E0CF6A40042DE6A /* JarvisUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B6808E82D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "JarvisUITests" */;
+			buildConfigurationList = 9B6751D52E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "JarvisUITests" */;
 			buildPhases = (
-				9B6808D32D8F964A008C4AA5 /* Sources */,
-				9B6808D42D8F964A008C4AA5 /* Frameworks */,
-				9B6808D52D8F964A008C4AA5 /* Resources */,
+				9B6751C12E0CF6A40042DE6A /* Sources */,
+				9B6751C22E0CF6A40042DE6A /* Frameworks */,
+				9B6751C32E0CF6A40042DE6A /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				9B6808D92D8F964A008C4AA5 /* PBXTargetDependency */,
+				9B6751C72E0CF6A40042DE6A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				9B6808DA2D8F964A008C4AA5 /* JarvisUITests */,
+				9B6751C82E0CF6A40042DE6A /* JarvisUITests */,
 			);
 			name = JarvisUITests;
 			packageProductDependencies = (
 			);
 			productName = JarvisUITests;
-			productReference = 9B6808D72D8F964A008C4AA5 /* JarvisUITests.xctest */;
+			productReference = 9B6751C52E0CF6A40042DE6A /* JarvisUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		9B6808B12D8F9648008C4AA5 /* Project object */ = {
+		9B6751A02E0CF6A20042DE6A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
-					9B6808B82D8F9648008C4AA5 = {
-						CreatedOnToolsVersion = 16.2;
+					9B6751A72E0CF6A20042DE6A = {
+						CreatedOnToolsVersion = 16.4;
 					};
-					9B6808CC2D8F964A008C4AA5 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 9B6808B82D8F9648008C4AA5;
+					9B6751BA2E0CF6A40042DE6A = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 9B6751A72E0CF6A20042DE6A;
 					};
-					9B6808D62D8F964A008C4AA5 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 9B6808B82D8F9648008C4AA5;
+					9B6751C42E0CF6A40042DE6A = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 9B6751A72E0CF6A20042DE6A;
 					};
 				};
 			};
-			buildConfigurationList = 9B6808B42D8F9648008C4AA5 /* Build configuration list for PBXProject "Jarvis" */;
+			buildConfigurationList = 9B6751A32E0CF6A20042DE6A /* Build configuration list for PBXProject "Jarvis" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 9B6808B02D8F9648008C4AA5;
+			mainGroup = 9B67519F2E0CF6A20042DE6A;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 9B6808BA2D8F9648008C4AA5 /* Products */;
+			productRefGroup = 9B6751A92E0CF6A20042DE6A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9B6808B82D8F9648008C4AA5 /* Jarvis */,
-				9B6808CC2D8F964A008C4AA5 /* JarvisTests */,
-				9B6808D62D8F964A008C4AA5 /* JarvisUITests */,
+				9B6751A72E0CF6A20042DE6A /* Jarvis */,
+				9B6751BA2E0CF6A40042DE6A /* JarvisTests */,
+				9B6751C42E0CF6A40042DE6A /* JarvisUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		9B6808B72D8F9648008C4AA5 /* Resources */ = {
+		9B6751A62E0CF6A20042DE6A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808CB2D8F964A008C4AA5 /* Resources */ = {
+		9B6751B92E0CF6A40042DE6A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808D52D8F964A008C4AA5 /* Resources */ = {
+		9B6751C32E0CF6A40042DE6A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -245,21 +232,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		9B6808B52D8F9648008C4AA5 /* Sources */ = {
+		9B6751A42E0CF6A20042DE6A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808C92D8F964A008C4AA5 /* Sources */ = {
+		9B6751B72E0CF6A40042DE6A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B6808D32D8F964A008C4AA5 /* Sources */ = {
+		9B6751C12E0CF6A40042DE6A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -269,100 +256,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		9B6808CF2D8F964A008C4AA5 /* PBXTargetDependency */ = {
+		9B6751BD2E0CF6A40042DE6A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9B6808B82D8F9648008C4AA5 /* Jarvis */;
-			targetProxy = 9B6808CE2D8F964A008C4AA5 /* PBXContainerItemProxy */;
+			target = 9B6751A72E0CF6A20042DE6A /* Jarvis */;
+			targetProxy = 9B6751BC2E0CF6A40042DE6A /* PBXContainerItemProxy */;
 		};
-		9B6808D92D8F964A008C4AA5 /* PBXTargetDependency */ = {
+		9B6751C72E0CF6A40042DE6A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9B6808B82D8F9648008C4AA5 /* Jarvis */;
-			targetProxy = 9B6808D82D8F964A008C4AA5 /* PBXContainerItemProxy */;
+			target = 9B6751A72E0CF6A20042DE6A /* Jarvis */;
+			targetProxy = 9B6751C62E0CF6A40042DE6A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		9B6808E12D8F964A008C4AA5 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Jarvis/Jarvis.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Jarvis/Preview Content\"";
-				DEVELOPMENT_TEAM = 8H757N372W;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Jarvis/Info.plist;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.Jarvis";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Debug;
-		};
-		9B6808E22D8F964A008C4AA5 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Jarvis/Jarvis.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Jarvis/Preview Content\"";
-				DEVELOPMENT_TEAM = 8H757N372W;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Jarvis/Info.plist;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.Jarvis";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Release;
-		};
-		9B6808E32D8F964A008C4AA5 /* Debug */ = {
+		9B6751CD2E0CF6A40042DE6A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -397,6 +304,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8H757N372W;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -415,15 +323,17 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		9B6808E42D8F964A008C4AA5 /* Release */ = {
+		9B6751CE2E0CF6A40042DE6A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -458,6 +368,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8H757N372W;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -470,142 +381,176 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
 		};
-		9B6808E62D8F964A008C4AA5 /* Debug */ = {
+		9B6751D02E0CF6A40042DE6A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Jarvis/Jarvis.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8H757N372W;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.JarvisTests";
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.Jarvis;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jarvis.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jarvis";
-				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Debug;
 		};
-		9B6808E72D8F964A008C4AA5 /* Release */ = {
+		9B6751D12E0CF6A40042DE6A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Jarvis/Jarvis.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8H757N372W;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.JarvisTests";
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.Jarvis;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jarvis.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jarvis";
-				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Release;
 		};
-		9B6808E92D8F964A008C4AA5 /* Debug */ = {
+		9B6751D32E0CF6A40042DE6A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8H757N372W;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.JarvisUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.JarvisTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = Jarvis;
-				XROS_DEPLOYMENT_TARGET = 2.2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jarvis.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jarvis";
 			};
 			name = Debug;
 		};
-		9B6808EA2D8F964A008C4AA5 /* Release */ = {
+		9B6751D42E0CF6A40042DE6A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8H757N372W;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.JarvisTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jarvis.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jarvis";
+			};
+			name = Release;
+		};
+		9B6751D62E0CF6A40042DE6A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8H757N372W;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "jarvis-ai.JarvisUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.JarvisUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_TARGET_NAME = Jarvis;
-				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Debug;
+		};
+		9B6751D72E0CF6A40042DE6A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8H757N372W;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = agarwalaarush.JarvisUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Jarvis;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9B6808B42D8F9648008C4AA5 /* Build configuration list for PBXProject "Jarvis" */ = {
+		9B6751A32E0CF6A20042DE6A /* Build configuration list for PBXProject "Jarvis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9B6808E32D8F964A008C4AA5 /* Debug */,
-				9B6808E42D8F964A008C4AA5 /* Release */,
+				9B6751CD2E0CF6A40042DE6A /* Debug */,
+				9B6751CE2E0CF6A40042DE6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B6808E02D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "Jarvis" */ = {
+		9B6751CF2E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "Jarvis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9B6808E12D8F964A008C4AA5 /* Debug */,
-				9B6808E22D8F964A008C4AA5 /* Release */,
+				9B6751D02E0CF6A40042DE6A /* Debug */,
+				9B6751D12E0CF6A40042DE6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B6808E52D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "JarvisTests" */ = {
+		9B6751D22E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "JarvisTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9B6808E62D8F964A008C4AA5 /* Debug */,
-				9B6808E72D8F964A008C4AA5 /* Release */,
+				9B6751D32E0CF6A40042DE6A /* Debug */,
+				9B6751D42E0CF6A40042DE6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B6808E82D8F964A008C4AA5 /* Build configuration list for PBXNativeTarget "JarvisUITests" */ = {
+		9B6751D52E0CF6A40042DE6A /* Build configuration list for PBXNativeTarget "JarvisUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9B6808E92D8F964A008C4AA5 /* Debug */,
-				9B6808EA2D8F964A008C4AA5 /* Release */,
+				9B6751D62E0CF6A40042DE6A /* Debug */,
+				9B6751D72E0CF6A40042DE6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 9B6808B12D8F9648008C4AA5 /* Project object */;
+	rootObject = 9B6751A02E0CF6A20042DE6A /* Project object */;
 }
