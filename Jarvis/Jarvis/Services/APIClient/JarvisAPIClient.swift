@@ -10,8 +10,8 @@ class JarvisAPIClient: APIClientProtocol {
     private var cancellables = Set<AnyCancellable>()
     
     private init() {
-        // Default to localhost for embedded backend
-        self.baseURL = URL(string: "http://localhost:5000/api/v1")!
+        // Try multiple ports for backend (5000 might be used by AirPlay)
+        self.baseURL = URL(string: "http://localhost:5001/api/v1")!
         
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30.0
@@ -20,6 +20,8 @@ class JarvisAPIClient: APIClientProtocol {
             "Accept": "application/json"
         ]
         self.session = URLSession(configuration: config)
+        
+        print("APIClient initialized with base URL: \(baseURL)")
     }
     
     func connect() -> AnyPublisher<ConnectionStatus, Never> {
@@ -245,17 +247,41 @@ class JarvisAPIClient: APIClientProtocol {
     
     // MARK: - Private Helper Methods
     private func get<T: Decodable>(_ url: URL) -> AnyPublisher<T, APIError> {
-        session.dataTaskPublisher(for: url)
+        print("GET request to: \(url)")
+        
+        return session.dataTaskPublisher(for: url)
             .tryMap { data, response in
-                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                print("Response received for GET \(url)")
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("HTTP Status: \(httpResponse.statusCode)")
+                    if httpResponse.statusCode == 200 {
+                        return data
+                    } else {
+                        let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown error"
+                        print("HTTP Error \(httpResponse.statusCode): \(errorMsg)")
+                        throw APIError.serverError(httpResponse.statusCode, errorMsg)
+                    }
+                } else {
+                    print("Invalid response type")
                     throw APIError.invalidResponse
                 }
-                return data
             }
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
+                print("Error in GET request to \(url): \(error)")
                 if let apiError = error as? APIError {
                     return apiError
+                } else if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .notConnectedToInternet:
+                        return APIError(code: "NETWORK_ERROR", message: "No internet connection", details: nil, timestamp: Date())
+                    case .cannotFindHost, .cannotConnectToHost:
+                        return APIError(code: "NETWORK_ERROR", message: "Cannot connect to server. Make sure the backend is running.", details: urlError.localizedDescription, timestamp: Date())
+                    case .timedOut:
+                        return APIError.timeout
+                    default:
+                        return APIError.networkError(urlError)
+                    }
                 } else {
                     return APIError.networkError(error)
                 }
@@ -264,21 +290,45 @@ class JarvisAPIClient: APIClientProtocol {
     }
     
     private func post<T: Decodable, B: Encodable>(_ url: URL, body: B) -> AnyPublisher<T, APIError> {
+        print("POST request to: \(url)")
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = try? JSONEncoder().encode(body)
         
         return session.dataTaskPublisher(for: request)
             .tryMap { data, response in
-                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 || httpResponse.statusCode == 201 else {
+                print("Response received for POST \(url)")
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("HTTP Status: \(httpResponse.statusCode)")
+                    if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+                        return data
+                    } else {
+                        let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown error"
+                        print("HTTP Error \(httpResponse.statusCode): \(errorMsg)")
+                        throw APIError.serverError(httpResponse.statusCode, errorMsg)
+                    }
+                } else {
+                    print("Invalid response type")
                     throw APIError.invalidResponse
                 }
-                return data
             }
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
+                print("Error in POST request to \(url): \(error)")
                 if let apiError = error as? APIError {
                     return apiError
+                } else if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .notConnectedToInternet:
+                        return APIError(code: "NETWORK_ERROR", message: "No internet connection", details: nil, timestamp: Date())
+                    case .cannotFindHost, .cannotConnectToHost:
+                        return APIError(code: "NETWORK_ERROR", message: "Cannot connect to server. Make sure the backend is running.", details: urlError.localizedDescription, timestamp: Date())
+                    case .timedOut:
+                        return APIError.timeout
+                    default:
+                        return APIError.networkError(urlError)
+                    }
                 } else {
                     return APIError.networkError(error)
                 }

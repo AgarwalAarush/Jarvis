@@ -100,11 +100,23 @@ def main():
         print("✅ Backend components initialized successfully")
         print("🎯 Starting Flask server...")
 
+        # Check if port 5000 is available, otherwise use alternative port
+        import socket
+        port = 5000
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(('localhost', port)) == 0:
+                print(f"⚠️  Port {port} is already in use (likely by AirPlay/AirTunes)")
+                port = 5001
+                print(f"🔄 Using alternative port: {port}")
+        
+        print(f"🌐 API will be available at: http://localhost:{port}")
+        print(f"🔌 WebSocket will be available at: ws://localhost:{port}")
+        
         # Run the server
         socketio.run(
             app,
             host='0.0.0.0',
-            port=5000,
+            port=port,
             debug=True,
             allow_unsafe_werkzeug=True
         )

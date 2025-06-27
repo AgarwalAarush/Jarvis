@@ -160,25 +160,57 @@ class ChatViewModel: ObservableObject {
     }
     
     private func handleAPIError(_ error: APIError) {
+        print("ChatViewModel: Handling API error - \(error.code): \(error.message)")
+        if let details = error.details {
+            print("Error details: \(details)")
+        }
+        
         errorMessage = error.localizedDescription
         
         // Implement retry logic for network errors
-        if case .networkError = error.code, retryCount < maxRetries {
+        if error.code == APIErrorType.networkError.rawValue, retryCount < maxRetries {
+            print("Network error detected, attempting retry \(retryCount + 1)/\(maxRetries)")
             retryLastMessage()
             return
         }
         
         retryCount = 0 // Reset retry count on non-network errors
         
+        // Create user-friendly error message based on error type
+        let userFriendlyMessage = getUserFriendlyErrorMessage(for: error)
+        
         // Add error message to chat for user visibility
         let errorResponse = MessageModel(
-            content: "Sorry, I encountered an error: \(error.message). Please try again.",
+            content: userFriendlyMessage,
             isUser: false
         )
         
         messages.append(errorResponse)
         if let chatId = currentChatId {
             saveMessage(errorResponse, to: chatId)
+        }
+    }
+    
+    private func getUserFriendlyErrorMessage(for error: APIError) -> String {
+        switch error.code {
+        case APIErrorType.networkError.rawValue:
+            if error.message.contains("Cannot connect to server") {
+                return "Sorry, I can't connect to the backend server. Please make sure the backend is running and try again."
+            } else if error.message.contains("No internet connection") {
+                return "Sorry, there's no internet connection. Please check your network and try again."
+            } else {
+                return "Sorry, I encountered a network error: \(error.message). Please try again."
+            }
+        case "SERVER_ERROR":
+            return "Sorry, the server encountered an error. Please try again in a moment."
+        case "TIMEOUT":
+            return "Sorry, the request timed out. Please try again."
+        case "AUTHENTICATION_ERROR":
+            return "Sorry, there was an authentication error. Please check your credentials."
+        case "RATE_LIMIT_EXCEEDED":
+            return "Sorry, too many requests. Please wait a moment before trying again."
+        default:
+            return "Sorry, I encountered an error: \(error.message). Please try again."
         }
     }
     
