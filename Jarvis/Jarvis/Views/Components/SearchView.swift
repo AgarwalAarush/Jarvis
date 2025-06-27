@@ -20,41 +20,26 @@ struct SearchView: View {
     
     @ViewBuilder
     private var searchHeader: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Text("Search Conversations")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                
-                TextField("Search messages and conversations...", text: $searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .onSubmit {
-                        performSearch()
-                    }
-                
-                if !searchText.isEmpty {
-                    Button(action: {
-                        searchText = ""
-                        searchResults = []
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(PlainButtonStyle())
+            ModernSearchField(
+                text: $searchText,
+                placeholder: "Search messages and conversations...",
+                onSubmit: {
+                    performSearch()
+                },
+                onClear: {
+                    searchText = ""
+                    searchResults = []
                 }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(NSColor.controlBackgroundColor))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
             )
+            .frame(maxWidth: 400)
         }
-        .padding()
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
     }
     
     @ViewBuilder
@@ -124,18 +109,20 @@ struct SearchView: View {
         return [
             SearchResult(
                 id: UUID(),
+                type: "message",
                 title: "Sample Chat",
                 content: "Found '\(searchText)' in a previous conversation",
+                conversationId: UUID(),
                 timestamp: Date().addingTimeInterval(-3600),
-                type: .message,
                 relevance: 0.95
             ),
             SearchResult(
                 id: UUID(),
+                type: "conversation",
                 title: "Project Discussion",
                 content: "Another mention of '\(searchText)' in project notes",
+                conversationId: UUID(),
                 timestamp: Date().addingTimeInterval(-7200),
-                type: .conversation,
                 relevance: 0.87
             )
         ]
@@ -184,23 +171,27 @@ struct SearchResultRow: View {
     
     private var iconName: String {
         switch result.type {
-        case .message:
+        case "message":
             return "message"
-        case .conversation:
+        case "conversation":
             return "bubble.left.and.bubble.right"
-        case .chat:
+        case "chat":
             return "text.bubble"
+        default:
+            return "questionmark.circle"
         }
     }
     
     private var typeText: String {
         switch result.type {
-        case .message:
+        case "message":
             return "Message"
-        case .conversation:
-            return "Conversation"
-        case .chat:
+        case "conversation":
+            return "Conversation" 
+        case "chat":
             return "Chat"
+        default:
+            return "Unknown"
         }
     }
 }

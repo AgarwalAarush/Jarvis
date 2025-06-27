@@ -6,51 +6,53 @@ struct MessageInputView: View {
     @FocusState private var isInputFocused: Bool
     
     var body: some View {
-        VStack(spacing: 8) {
-            // Input field
-            HStack(spacing: 8) {
-                // Text input
-                TextField("Type a message...", text: $viewModel.inputText, axis: .vertical)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .focused($isInputFocused)
-                    .lineLimit(1...5)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(NSColor.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
-                    .onSubmit {
+        VStack(spacing: 12) {
+            // Input field with send button
+            HStack(spacing: 12) {
+                // Modern text input
+                ModernMessageField(
+                    text: $viewModel.inputText,
+                    placeholder: "Type a message...",
+                    onSubmit: {
                         sendMessage()
-                    }
+                    },
+                    lineLimit: 1...5
+                )
+                .focused($isInputFocused)
                 
                 // Send button
                 Button(action: sendMessage) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .font(.title2)
+                        .font(.system(size: 24, weight: .medium))
                         .foregroundColor(canSendMessage ? .accentColor : .gray)
+                        .scaleEffect(canSendMessage ? 1.0 : 0.9)
+                        .animation(.easeInOut(duration: 0.2), value: canSendMessage)
                 }
                 .disabled(!canSendMessage)
                 .help("Send message (⌘+Return)")
+                .buttonStyle(PlainButtonStyle())
             }
             
             // Character count and status
             HStack {
                 Text("\(viewModel.inputText.count) characters")
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
                 
                 Spacer()
                 
                 if viewModel.isLoading {
-                    Text("Processing...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        LoadingDots()
+                        Text("Processing...")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(Color(NSColor.controlBackgroundColor))
         .onAppear {
             isInputFocused = true
@@ -61,7 +63,7 @@ struct MessageInputView: View {
     }
     
     private var canSendMessage: Bool {
-        !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isLoading
+        !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isLoading && !viewModel.isRetrying
     }
     
     private func sendMessage() {
@@ -69,6 +71,31 @@ struct MessageInputView: View {
         
         viewModel.sendMessage()
         isInputFocused = true
+    }
+}
+
+// MARK: - Loading Dots
+struct LoadingDots: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<3) { index in
+                Circle()
+                    .fill(Color.secondary)
+                    .frame(width: 4, height: 4)
+                    .scaleEffect(isAnimating ? 1.2 : 0.8)
+                    .animation(
+                        Animation.easeInOut(duration: 0.5)
+                            .repeatForever()
+                            .delay(Double(index) * 0.15),
+                        value: isAnimating
+                    )
+            }
+        }
+        .onAppear {
+            isAnimating = true
+        }
     }
 }
 

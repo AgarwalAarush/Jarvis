@@ -209,7 +209,7 @@ class WebSocketClient: ObservableObject {
 }
 
 // MARK: - WebSocket Connection Status
-enum WebSocketConnectionStatus {
+enum WebSocketConnectionStatus: Equatable {
     case disconnected
     case connecting
     case connected

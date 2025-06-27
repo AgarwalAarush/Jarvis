@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 import SwiftUI
+import Combine
 
 class ChatViewModel: ObservableObject {
     @Published var messages: [MessageModel] = []
@@ -9,12 +10,32 @@ class ChatViewModel: ObservableObject {
     @Published var currentChatId: UUID?
     @Published var currentChatTitle: String = "New Chat"
     @Published var lastActivity: Date?
+    @Published var errorMessage: String?
+    @Published var connectionStatus: ConnectionStatus = .disconnected
+    @Published var isRetrying: Bool = false
     
     @Environment(\.managedObjectContext) private var viewContext
     private var dataController: DataController?
+    private let apiClient: JarvisAPIClient
+    private var cancellables = Set<AnyCancellable>()
+    private var retryCount = 0
+    private let maxRetries = 3
     
-    init() {
-        // This will be set by the view
+    init(apiClient: JarvisAPIClient = JarvisAPIClient.shared) {
+        self.apiClient = apiClient
+        setupConnectionMonitoring()
+    }
+    
+    private func setupConnectionMonitoring() {
+        connectionStatus = apiClient.connectionStatus
+        
+        // Monitor connection status changes
+        apiClient.connect()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                self?.connectionStatus = status
+            }
+            .store(in: &cancellables)
     }
     
     func setDataController(_ dataController: DataController) {
@@ -121,39 +142,85 @@ class ChatViewModel: ObservableObject {
             updateChatTitle(to: userInput)
         }
         
-        // Simulate bot response (this will be replaced with actual API call)
+        // Send message to API
         isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.generateBotResponse(to: userInput, in: chatId)
-        }
+        errorMessage = nil
+        
+        sendMessageToAPI(userInput, in: chatId)
     }
     
-    private func generateBotResponse(to userInput: String, in chatId: UUID) {
-        // This is a placeholder - will be replaced with actual API integration
+    private func handleAPIResponse(_ response: ChatResponse, in chatId: UUID) {
         let botResponse = MessageModel(
-            content: """
-            **Response to**: \(userInput)
-            
-            This is a placeholder response. The actual API integration will be implemented in Phase 2.
-            
-            - This is a bullet point
-            - This is *italicized* text
-            - This is **bold** text
-            
-            ```
-            func greet(name: String) {
-                print("Hello, \\(name)!")
-            }
-            
-            greet(name: "User")
-            ```
-            """,
+            content: response.message,
             isUser: false
         )
         
         messages.append(botResponse)
         saveMessage(botResponse, to: chatId)
-        isLoading = false
+    }
+    
+    private func handleAPIError(_ error: APIError) {
+        errorMessage = error.localizedDescription
+        
+        // Implement retry logic for network errors
+        if case .networkError = error.code, retryCount < maxRetries {
+            retryLastMessage()
+            return
+        }
+        
+        retryCount = 0 // Reset retry count on non-network errors
+        
+        // Add error message to chat for user visibility
+        let errorResponse = MessageModel(
+            content: "Sorry, I encountered an error: \(error.message). Please try again.",
+            isUser: false
+        )
+        
+        messages.append(errorResponse)
+        if let chatId = currentChatId {
+            saveMessage(errorResponse, to: chatId)
+        }
+    }
+    
+    private func retryLastMessage() {
+        guard retryCount < maxRetries else {
+            retryCount = 0
+            return
+        }
+        
+        retryCount += 1
+        isRetrying = true
+        
+        // Find the last user message to retry
+        guard let lastUserMessage = messages.last(where: { $0.isUser }),
+              let chatId = currentChatId else {
+            isRetrying = false
+            return
+        }
+        
+        // Retry after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(retryCount)) {
+            self.sendMessageToAPI(lastUserMessage.content, in: chatId)
+        }
+    }
+    
+    private func sendMessageToAPI(_ message: String, in chatId: UUID) {
+        apiClient.sendMessage(message, conversationId: chatId)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoading = false
+                    self?.isRetrying = false
+                    if case .failure(let error) = completion {
+                        self?.handleAPIError(error)
+                    }
+                },
+                receiveValue: { [weak self] response in
+                    self?.retryCount = 0 // Reset on success
+                    self?.handleAPIResponse(response, in: chatId)
+                }
+            )
+            .store(in: &cancellables)
     }
     
     private func saveMessage(_ message: MessageModel, to chatId: UUID) {
@@ -218,6 +285,10 @@ class ChatViewModel: ObservableObject {
     // MARK: - Utility Methods
     func clearMessages() {
         messages.removeAll()
+    }
+    
+    func clearError() {
+        errorMessage = nil
     }
     
     func deleteCurrentChat() {

@@ -17,7 +17,7 @@ class VoiceViewModel: ObservableObject {
     // MARK: - Audio Services
     private let audioManager: AudioManager
     private let audioStreamer: AudioStreamer
-    private let audioVisualizer: AudioVisualizer
+    let audioVisualizer: AudioVisualizer
     private let apiClient: APIClientProtocol
     
     // MARK: - State Management
@@ -29,7 +29,7 @@ class VoiceViewModel: ObservableObject {
         self.apiClient = apiClient
         self.audioManager = AudioManager()
         self.audioStreamer = AudioStreamer(audioManager: audioManager, apiClient: apiClient)
-        self.audioVisualizer = AudioVisualizer(audioManager: audioManager)
+        self.audioVisualizer = AudioVisualizer(barCount: 30)
         
         setupAudioSession()
         setupStateObservers()
@@ -213,10 +213,6 @@ class VoiceViewModel: ObservableObject {
     }
     
     // MARK: - Audio Visualization
-    func getAudioVisualizer() -> AudioVisualizer {
-        return audioVisualizer
-    }
-    
     func startAudioVisualization() {
         audioVisualizer.startVisualization()
     }
@@ -371,82 +367,10 @@ extension VoiceState {
 // MARK: - Preview Helper
 extension VoiceViewModel {
     static var preview: VoiceViewModel {
-        let mockAPIClient = MockAPIClient()
-        let viewModel = VoiceViewModel(apiClient: mockAPIClient)
+        let viewModel = VoiceViewModel(apiClient: JarvisAPIClient.shared)
         viewModel.voiceState = .idle
         viewModel.audioLevel = 0.3
         viewModel.isWakeWordEnabled = true
         return viewModel
     }
 }
-
-// MARK: - Mock API Client for Preview
-private class MockAPIClient: APIClientProtocol {
-    func connect() -> AnyPublisher<ConnectionStatus, Never> {
-        return Just(.connected).eraseToAnyPublisher()
-    }
-    
-    func disconnect() {}
-    
-    var connectionStatus: ConnectionStatus = .connected
-    
-    func sendMessage(_ message: String, conversationId: UUID?) -> AnyPublisher<ChatResponse, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func sendMessageStream(_ message: String, conversationId: UUID?) -> AnyPublisher<ChatStreamResponse, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func getConversations() -> AnyPublisher<[ConversationDTO], APIError> {
-        return Just([]).setFailureType(to: APIError.self).eraseToAnyPublisher()
-    }
-    
-    func createConversation(title: String?) -> AnyPublisher<ConversationDTO, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func getConversation(id: UUID) -> AnyPublisher<ConversationDTO, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func deleteConversation(id: UUID) -> AnyPublisher<Void, APIError> {
-        return Just(()).setFailureType(to: APIError.self).eraseToAnyPublisher()
-    }
-    
-    func updateConversation(id: UUID, title: String) -> AnyPublisher<ConversationDTO, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func searchConversations(query: String) -> AnyPublisher<[SearchResult], APIError> {
-        return Just([]).setFailureType(to: APIError.self).eraseToAnyPublisher()
-    }
-    
-    func searchMessages(query: String, conversationId: UUID?) -> AnyPublisher<[SearchResult], APIError> {
-        return Just([]).setFailureType(to: APIError.self).eraseToAnyPublisher()
-    }
-    
-    func exportConversation(id: UUID, format: ExportFormat) -> AnyPublisher<Data, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func exportAllConversations(format: ExportFormat) -> AnyPublisher<Data, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func getStatus() -> AnyPublisher<SystemStatus, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func getModels() -> AnyPublisher<[ModelInfo], APIError> {
-        return Just([]).setFailureType(to: APIError.self).eraseToAnyPublisher()
-    }
-    
-    func getConfig() -> AnyPublisher<SystemConfig, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-    
-    func healthCheck() -> AnyPublisher<HealthStatus, APIError> {
-        return Fail(error: APIError.unknown).eraseToAnyPublisher()
-    }
-} 

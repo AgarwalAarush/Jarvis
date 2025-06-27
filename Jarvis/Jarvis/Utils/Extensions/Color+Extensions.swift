@@ -94,10 +94,10 @@ extension Color {
         let components = self.components
         let factor = 1.0 + percentage
         return Color(
-            red: min(components.red * factor, 1.0),
-            green: min(components.green * factor, 1.0),
-            blue: min(components.blue * factor, 1.0),
-            alpha: components.alpha
+            red: Swift.min(components.red * factor, 1.0),
+            green: Swift.min(components.green * factor, 1.0),
+            blue: Swift.min(components.blue * factor, 1.0),
+            opacity: components.alpha
         )
     }
     
@@ -108,7 +108,7 @@ extension Color {
             red: max(components.red * factor, 0.0),
             green: max(components.green * factor, 0.0),
             blue: max(components.blue * factor, 0.0),
-            alpha: components.alpha
+            opacity: components.alpha
         )
     }
     
@@ -118,7 +118,7 @@ extension Color {
             red: components.red,
             green: components.green,
             blue: components.blue,
-            alpha: alpha
+            opacity: alpha
         )
     }
     
@@ -126,10 +126,10 @@ extension Color {
         let components = self.components
         let factor = brightness / (components.red * 0.299 + components.green * 0.587 + components.blue * 0.114)
         return Color(
-            red: min(components.red * factor, 1.0),
-            green: min(components.green * factor, 1.0),
-            blue: min(components.blue * factor, 1.0),
-            alpha: components.alpha
+            red: Swift.min(components.red * factor, 1.0),
+            green: Swift.min(components.green * factor, 1.0),
+            blue: Swift.min(components.blue * factor, 1.0),
+            opacity: components.alpha
         )
     }
     
@@ -140,7 +140,7 @@ extension Color {
             red: gray + (components.red - gray) * saturation,
             green: gray + (components.green - gray) * saturation,
             blue: gray + (components.blue - gray) * saturation,
-            alpha: components.alpha
+            opacity: components.alpha
         )
     }
     
@@ -153,7 +153,7 @@ extension Color {
             red: components1.red * (1 - ratio) + components2.red * ratio,
             green: components1.green * (1 - ratio) + components2.green * ratio,
             blue: components1.blue * (1 - ratio) + components2.blue * ratio,
-            alpha: components1.alpha * (1 - ratio) + components2.alpha * ratio
+            opacity: components1.alpha * (1 - ratio) + components2.alpha * ratio
         )
     }
     
@@ -165,7 +165,7 @@ extension Color {
             red: components1.red * components2.red,
             green: components1.green * components2.green,
             blue: components1.blue * components2.blue,
-            alpha: components1.alpha * components2.alpha
+            opacity: components1.alpha * components2.alpha
         )
     }
     
@@ -177,7 +177,7 @@ extension Color {
             red: 1 - (1 - components1.red) * (1 - components2.red),
             green: 1 - (1 - components1.green) * (1 - components2.green),
             blue: 1 - (1 - components1.blue) * (1 - components2.blue),
-            alpha: components1.alpha
+            opacity: components1.alpha
         )
     }
     
@@ -213,8 +213,8 @@ extension Color {
         let luminance1 = self.luminance
         let luminance2 = color.luminance
         
-        let lighter = max(luminance1, luminance2)
-        let darker = min(luminance1, luminance2)
+        let lighter = Swift.max(luminance1, luminance2)
+        let darker = Swift.min(luminance1, luminance2)
         
         return (lighter + 0.05) / (darker + 0.05)
     }
@@ -234,7 +234,7 @@ extension Color {
             red: 1.0 - components.red,
             green: 1.0 - components.green,
             blue: 1.0 - components.blue,
-            alpha: components.alpha
+            opacity: components.alpha
         )
     }
     

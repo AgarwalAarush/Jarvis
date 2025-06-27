@@ -14,6 +14,7 @@ struct JarvisApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var dataController = DataController()
     @StateObject private var stateManager = JarvisStateManager.shared
+    @StateObject private var backendManager = BackendProcessManager()
     
     var body: some Scene {
         WindowGroup {
@@ -22,6 +23,10 @@ struct JarvisApp: App {
                 .environment(\.managedObjectContext, dataController.container.viewContext)
                 .environmentObject(dataController)
                 .environmentObject(stateManager)
+                .environmentObject(backendManager)
+                .onAppear {
+                    backendManager.startBackend()
+                }
         }
         .commands {
             // Add custom menu commands

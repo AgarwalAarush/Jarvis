@@ -72,19 +72,6 @@ struct MessageBubbleView: View {
     }
 }
 
-// MARK: - Markdown View
-struct MarkdownView: View {
-    let content: String
-    
-    var body: some View {
-        Text(.init(content))
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .environment(\.colorScheme, .dark)
-            .environment(\.font, .system(.body, design: .monospaced))
-    }
-}
-
 // MARK: - Preview
 struct MessageBubbleView_Previews: PreviewProvider {
     static var previews: some View {
@@ -102,4 +89,4 @@ struct MessageBubbleView_Previews: PreviewProvider {
         .environmentObject(JarvisStateManager.preview)
         .padding()
     }
-} 
+}

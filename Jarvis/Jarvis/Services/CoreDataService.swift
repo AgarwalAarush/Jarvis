@@ -314,10 +314,16 @@ class CoreDataService: ObservableObject {
     private func setupObservers() {
         // Monitor Core Data save notifications
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-            .sink { [weak self] _ in
+            .sink { [weak self] notification in
                 // Handle save notifications if needed
+                self?.handleContextDidSave(notification)
             }
             .store(in: &cancellables)
+    }
+    
+    private func handleContextDidSave(_ notification: Notification) {
+        // Placeholder for handling Core Data save notifications
+        // This could be used for updating UI or triggering other actions
     }
     
     // MARK: - Error Handling
@@ -383,7 +389,13 @@ struct MessageExport: Codable {
         content = try container.decode(String.self, forKey: .content)
         isUser = try container.decode(Bool.self, forKey: .isUser)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
-        metadata = try container.decodeIfPresent([String: Any].self, forKey: .metadata)
+        
+        // Handle metadata as JSON data
+        if let metadataDict = try container.decodeIfPresent([String: String].self, forKey: .metadata) {
+            metadata = metadataDict
+        } else {
+            metadata = nil
+        }
     }
     
     func encode(to encoder: Encoder) throws {
@@ -392,7 +404,12 @@ struct MessageExport: Codable {
         try container.encode(content, forKey: .content)
         try container.encode(isUser, forKey: .isUser)
         try container.encode(timestamp, forKey: .timestamp)
-        try container.encodeIfPresent(metadata, forKey: .metadata)
+        
+        // Encode metadata as simplified dictionary
+        if let metadata = metadata {
+            let stringDict = metadata.compactMapValues { String(describing: $0) }
+            try container.encode(stringDict, forKey: .metadata)
+        }
     }
 }
 

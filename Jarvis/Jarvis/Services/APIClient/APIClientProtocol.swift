@@ -27,9 +27,13 @@ protocol APIClientProtocol {
     func exportConversation(id: UUID, format: ExportFormat) -> AnyPublisher<Data, APIError>
     func exportAllConversations(format: ExportFormat) -> AnyPublisher<Data, APIError>
     
+    // MARK: - Voice Processing
+    func uploadAudio(_ audioData: Data, format: String, processWithLLM: Bool, conversationId: UUID?) -> AnyPublisher<VoiceProcessingResponse, APIError>
+    func transcribeAudio(_ audioData: Data, format: String) -> AnyPublisher<TranscriptionResponse, APIError>
+    
     // MARK: - System
     func getStatus() -> AnyPublisher<SystemStatus, APIError>
-    func getModels() -> AnyPublisher<[ModelInfo], APIError>
+    func getModels() -> AnyPublisher<[ModelsResponse.ModelInfo], APIError>
     func getConfig() -> AnyPublisher<SystemConfig, APIError>
     func healthCheck() -> AnyPublisher<HealthStatus, APIError>
 }
@@ -50,13 +54,6 @@ struct ChatStreamResponse: Codable {
     }
 }
 
-struct ModelInfo: Codable, Identifiable {
-    let id: String
-    let name: String
-    let description: String?
-    let parameters: Int?
-    let isAvailable: Bool
-}
 
 struct SystemConfig: Codable {
     let apiVersion: String
@@ -75,4 +72,34 @@ struct HealthStatus: Codable {
         let status: String
         let message: String?
     }
+}
+
+struct VoiceProcessingResponse: Codable {
+    let transcription: String
+    let confidence: Double
+    let language: String
+    let duration: Double
+    let timestamp: String
+    let metadata: [String: CodableValue]
+    let conversationId: UUID?
+    let llmResponse: String?
+    let messageId: String?
+    let llmError: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case transcription, confidence, language, duration, timestamp, metadata
+        case conversationId = "conversation_id"
+        case llmResponse = "llm_response"
+        case messageId = "message_id"
+        case llmError = "llm_error"
+    }
+}
+
+struct TranscriptionResponse: Codable {
+    let transcription: String
+    let confidence: Double
+    let language: String
+    let duration: Double
+    let timestamp: String
+    let metadata: [String: CodableValue]
 } 

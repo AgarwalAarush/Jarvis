@@ -27,7 +27,11 @@ extension String {
     
     var isValidURL: Bool {
         guard let url = URL(string: self) else { return false }
+        #if canImport(UIKit)
         return UIApplication.shared.canOpenURL(url)
+        #else
+        return url.scheme != nil && url.host != nil
+        #endif
     }
     
     var isAlphanumeric: Bool {
@@ -174,6 +178,7 @@ extension String {
     }
     
     // MARK: - Hash and Checksum
+    @available(*, deprecated, message: "MD5 is cryptographically broken and should not be used for security purposes. Use SHA256 instead.")
     var md5Hash: String {
         let data = Data(self.utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
@@ -334,7 +339,6 @@ extension String {
     // MARK: - Comparison
     func similarity(to other: String) -> Double {
         let longer = self.count > other.count ? self : other
-        let shorter = self.count > other.count ? other : self
         
         if longer.count == 0 {
             return 1.0
@@ -351,7 +355,7 @@ extension String {
         for (i, char1) in self.enumerated() {
             var current = [i + 1] + empty
             for (j, char2) in other.enumerated() {
-                current[j + 1] = char1 == char2 ? last[j] : min(last[j], last[j + 1], current[j]) + 1
+                current[j + 1] = char1 == char2 ? last[j] : Swift.min(last[j], last[j + 1], current[j]) + 1
             }
             last = current
         }
@@ -370,7 +374,9 @@ extension String {
     }
     
     func attributedItalic() -> NSAttributedString {
-        return self.attributed(with: [.font: NSFont.italicSystemFont(ofSize: NSFont.systemFontSize)])
+        let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        let italicFont = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+        return self.attributed(with: [.font: italicFont])
     }
     
     func attributedColored(_ color: NSColor) -> NSAttributedString {

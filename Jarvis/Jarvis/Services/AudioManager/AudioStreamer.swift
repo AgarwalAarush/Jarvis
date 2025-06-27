@@ -14,12 +14,10 @@ class AudioStreamer: NSObject, ObservableObject {
     @Published private(set) var bytesSent: Int64 = 0
     @Published private(set) var bytesReceived: Int64 = 0
     
-    private var audioBuffer: Data = Data()
     private var streamingTask: URLSessionDataTask?
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Configuration
-    private let bufferThreshold: Int = 4096 // 4KB buffer threshold
     private let streamingURL: URL
     private let session: URLSession
     
@@ -53,7 +51,7 @@ class AudioStreamer: NSObject, ObservableObject {
             
             var request = URLRequest(url: streamingURL)
             request.httpMethod = "POST"
-            request.setValue("audio/wav", forHTTPHeaderField: "Content-Type")
+            request.setValue("audio/pcm", forHTTPHeaderField: "Content-Type")
             request.setValue("chunked", forHTTPHeaderField: "Transfer-Encoding")
             
             streamingTask = session.dataTask(with: request) { [weak self] data, response, error in
@@ -78,7 +76,6 @@ class AudioStreamer: NSObject, ObservableObject {
         audioManager.stopRecording()
         
         isStreaming = false
-        audioBuffer.removeAll()
     }
     
     func startReceiving() {
@@ -86,7 +83,7 @@ class AudioStreamer: NSObject, ObservableObject {
         
         var request = URLRequest(url: streamingURL.appendingPathComponent("receive"))
         request.httpMethod = "GET"
-        request.setValue("audio/wav", forHTTPHeaderField: "Accept")
+        request.setValue("audio/pcm", forHTTPHeaderField: "Accept")
         
         let task = session.dataTask(with: request) { [weak self] data, response, error in
             self?.handleReceivingResponse(data: data, response: response, error: error)
@@ -102,50 +99,20 @@ class AudioStreamer: NSObject, ObservableObject {
     
     // MARK: - Private Methods
     private func setupAudioMonitoring() {
-        // Monitor audio manager for audio data
-        audioManager.$audioLevel
-            .sink { [weak self] level in
-                self?.processAudioLevel(level)
+        audioManager.audioBufferPublisher
+            .sink { [weak self] buffer in
+                self?.sendAudioBuffer(buffer)
             }
             .store(in: &cancellables)
     }
     
-    private func processAudioLevel(_ level: Float) {
-        // Convert audio level to audio data and add to buffer
-        // This is a simplified implementation - in practice, you'd get actual audio data
-        let audioData = createAudioData(from: level)
-        audioBuffer.append(audioData)
-        
-        // Send buffer if it exceeds threshold
-        if audioBuffer.count >= bufferThreshold {
-            sendAudioBuffer()
-        }
-    }
-    
-    private func createAudioData(from level: Float) -> Data {
-        // Create mock audio data from level
-        // In practice, this would be actual audio samples
-        let sampleCount = 1024
-        var samples: [Float] = []
-        
-        for _ in 0..<sampleCount {
-            let sample = Float.random(in: -level...level)
-            samples.append(sample)
-        }
-        
-        return Data(bytes: samples, count: samples.count * MemoryLayout<Float>.size)
-    }
-    
-    private func sendAudioBuffer() {
-        guard isStreaming, !audioBuffer.isEmpty else { return }
-        
-        let dataToSend = audioBuffer
-        audioBuffer.removeAll()
+    private func sendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        guard isStreaming, let data = buffer.toData() else { return }
         
         // Send audio data to server
         streamingTask?.resume()
         
-        bytesSent += Int64(dataToSend.count)
+        bytesSent += Int64(data.count)
     }
     
     private func handleStreamingResponse(data: Data?, response: URLResponse?, error: Error?) {
@@ -214,182 +181,22 @@ class AudioStreamer: NSObject, ObservableObject {
     }
 }
 
-// MARK: - Audio Streaming Configuration
-struct AudioStreamingConfig {
-    let sampleRate: Double
-    let channels: Int
-    let bitDepth: Int
-    let bufferSize: Int
-    let compressionEnabled: Bool
-    let encryptionEnabled: Bool
-    
-    static let standard = AudioStreamingConfig(
-        sampleRate: 16000,
-        channels: 1,
-        bitDepth: 16,
-        bufferSize: 4096,
-        compressionEnabled: true,
-        encryptionEnabled: false
-    )
-    
-    static let highQuality = AudioStreamingConfig(
-        sampleRate: 44100,
-        channels: 2,
-        bitDepth: 24,
-        bufferSize: 8192,
-        compressionEnabled: true,
-        encryptionEnabled: true
-    )
-}
-
-// MARK: - Audio Streaming Stats
-struct AudioStreamingStats {
-    let bytesSent: Int64
-    let bytesReceived: Int64
-    let packetsSent: Int
-    let packetsReceived: Int
-    let averageLatency: TimeInterval
-    let packetLoss: Double
-    let timestamp: Date
-    
-    var throughput: Double {
-        let totalBytes = bytesSent + bytesReceived
-        return Double(totalBytes) / 1024.0 // KB/s
-    }
-}
-
-// MARK: - Audio Streaming Error
-enum AudioStreamingError: Error, LocalizedError {
-    case connectionFailed(String)
-    case authenticationFailed
-    case serverError(Int, String)
-    case audioProcessingFailed(String)
-    case networkTimeout
-    case invalidAudioFormat
-    case bufferOverflow
-    case unknown
-    
-    var errorDescription: String? {
-        switch self {
-        case .connectionFailed(let message):
-            return "Connection failed: \(message)"
-        case .authenticationFailed:
-            return "Authentication failed"
-        case .serverError(let code, let message):
-            return "Server error \(code): \(message)"
-        case .audioProcessingFailed(let message):
-            return "Audio processing failed: \(message)"
-        case .networkTimeout:
-            return "Network timeout"
-        case .invalidAudioFormat:
-            return "Invalid audio format"
-        case .bufferOverflow:
-            return "Audio buffer overflow"
-        case .unknown:
-            return "Unknown streaming error"
+// MARK: - AVAudioPCMBuffer Extension
+extension AVAudioPCMBuffer {
+    func toData() -> Data? {
+        let channelCount = Int(format.channelCount)
+        let frameLength = Int(frameLength)
+        let stride = format.streamDescription.pointee.mBytesPerFrame
+        
+        let byteCount = frameLength * Int(stride)
+        var data = Data(capacity: byteCount)
+        
+        guard let floatChannelData = floatChannelData else { return nil }
+        
+        for channel in 0..<channelCount {
+            data.append(UnsafeBufferPointer(start: floatChannelData[channel], count: frameLength))
         }
+        
+        return data
     }
 }
-
-// MARK: - Audio Streaming Protocol
-protocol AudioStreamingProtocol {
-    func startStreaming() throws
-    func stopStreaming()
-    func startReceiving()
-    func stopReceiving()
-    func sendAudioData(_ data: Data)
-    func receiveAudioData() -> AnyPublisher<Data, AudioStreamingError>
-}
-
-// MARK: - Audio Streaming Manager
-class AudioStreamingManager: ObservableObject {
-    // MARK: - Properties
-    private let streamer: AudioStreamer
-    private let config: AudioStreamingConfig
-    
-    @Published private(set) var stats = AudioStreamingStats(
-        bytesSent: 0,
-        bytesReceived: 0,
-        packetsSent: 0,
-        packetsReceived: 0,
-        averageLatency: 0,
-        packetLoss: 0,
-        timestamp: Date()
-    )
-    
-    @Published private(set) var isActive = false
-    @Published private(set) var error: AudioStreamingError?
-    
-    private var statsTimer: Timer?
-    private var cancellables = Set<AnyCancellable>()
-    
-    // MARK: - Initialization
-    init(streamer: AudioStreamer, config: AudioStreamingConfig = .standard) {
-        self.streamer = streamer
-        self.config = config
-        
-        setupMonitoring()
-    }
-    
-    // MARK: - Public Methods
-    func startStreaming() throws {
-        try streamer.startStreaming()
-        isActive = true
-        error = nil
-        startStatsMonitoring()
-    }
-    
-    func stopStreaming() {
-        streamer.stopStreaming()
-        isActive = false
-        stopStatsMonitoring()
-    }
-    
-    // MARK: - Private Methods
-    private func setupMonitoring() {
-        // Monitor streamer state
-        streamer.$isStreaming
-            .combineLatest(streamer.$isReceiving)
-            .map { $0 || $1 }
-            .assign(to: \.isActive, on: self)
-            .store(in: &cancellables)
-        
-        // Monitor streamer errors
-        streamer.$streamError
-            .compactMap { $0 }
-            .map { AudioStreamingError.connectionFailed($0) }
-            .assign(to: \.error, on: self)
-            .store(in: &cancellables)
-        
-        // Monitor bytes sent/received
-        streamer.$bytesSent
-            .combineLatest(streamer.$bytesReceived)
-            .sink { [weak self] sent, received in
-                self?.updateStats(bytesSent: sent, bytesReceived: received)
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func startStatsMonitoring() {
-        statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.updateStats()
-        }
-    }
-    
-    private func stopStatsMonitoring() {
-        statsTimer?.invalidate()
-        statsTimer = nil
-    }
-    
-    private func updateStats(bytesSent: Int64 = 0, bytesReceived: Int64 = 0) {
-        stats = AudioStreamingStats(
-            bytesSent: bytesSent,
-            bytesReceived: bytesReceived,
-            packetsSent: Int(bytesSent / Int64(config.bufferSize)),
-            packetsReceived: Int(bytesReceived / Int64(config.bufferSize)),
-            averageLatency: 0.1, // Mock latency
-            packetLoss: 0.0, // Mock packet loss
-            timestamp: Date()
-        )
-    }
-} 

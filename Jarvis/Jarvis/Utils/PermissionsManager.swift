@@ -2,6 +2,8 @@ import Foundation
 import AVFoundation
 import AppKit
 import Combine
+import UserNotifications
+import SwiftUI
 
 class PermissionsManager: ObservableObject {
     // MARK: - Published Properties
@@ -28,13 +30,15 @@ class PermissionsManager: ObservableObject {
     }
     
     func checkMicrophonePermission() {
-        switch AVAudioSession.sharedInstance().recordPermission {
-        case .granted:
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized:
             microphonePermission = .granted
         case .denied:
             microphonePermission = .denied
-        case .undetermined:
+        case .notDetermined:
             microphonePermission = .notDetermined
+        case .restricted:
+            microphonePermission = .denied
         @unknown default:
             microphonePermission = .unknown
         }
@@ -47,25 +51,30 @@ class PermissionsManager: ObservableObject {
     }
     
     func checkAutomationPermission() {
-        // Check if we can run AppleScript
         let testScript = """
-        tell application "System Events"
-            return "test"
-        end tell
-        """
+tell application "System Events"
+    return "test"
+end tell
+"""
+        
+        guard let scriptObject = NSAppleScript(source: testScript) else {
+            automationPermission = .denied
+            return
+        }
         
         var error: NSDictionary?
-        if let scriptObject = NSAppleScript(source: testScript) {
-            let result = scriptObject.executeAndReturnError(&error)
-            automationPermission = error == nil ? .granted : .denied
-        } else {
+        _ = scriptObject.executeAndReturnError(&error)
+        
+        if error != nil {
             automationPermission = .denied
+        } else {
+            automationPermission = .granted
         }
     }
     
     func checkNotificationPermission() {
-        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
-            DispatchQueue.main.async {
+        UNUserNotificationCenter.current().getNotificationSettings { @Sendable [weak self] settings in
+            Task { @MainActor in
                 switch settings.authorizationStatus {
                 case .authorized, .provisional, .ephemeral:
                     self?.notificationPermission = .granted
@@ -82,14 +91,11 @@ class PermissionsManager: ObservableObject {
     
     // MARK: - Permission Requesting
     func requestMicrophonePermission() async -> Bool {
-        return await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                DispatchQueue.main.async {
-                    self.microphonePermission = granted ? .granted : .denied
-                    continuation.resume(returning: granted)
-                }
-            }
+        let granted = await AVCaptureDevice.requestAccess(for: .audio)
+        await MainActor.run {
+            self.microphonePermission = granted ? .granted : .denied
         }
+        return granted
     }
     
     func requestAccessibilityPermission() -> Bool {
@@ -100,34 +106,38 @@ class PermissionsManager: ObservableObject {
     }
     
     func requestAutomationPermission() -> Bool {
-        // Request automation permission by trying to run a simple script
         let testScript = """
-        tell application "System Events"
-            return "test"
-        end tell
-        """
+tell application "System Events"
+    return "test"
+end tell
+"""
         
-        var error: NSDictionary?
-        if let scriptObject = NSAppleScript(source: testScript) {
-            let result = scriptObject.executeAndReturnError(&error)
-            let granted = error == nil
-            automationPermission = granted ? .granted : .denied
-            return granted
-        } else {
+        guard let scriptObject = NSAppleScript(source: testScript) else {
             automationPermission = .denied
             return false
+        }
+        
+        var error: NSDictionary?
+        _ = scriptObject.executeAndReturnError(&error)
+        
+        if error != nil {
+            automationPermission = .denied
+            return false
+        } else {
+            automationPermission = .granted
+            return true
         }
     }
     
     func requestNotificationPermission() async -> Bool {
         do {
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.notificationPermission = granted ? .granted : .denied
             }
             return granted
         } catch {
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.notificationPermission = .denied
             }
             return false
@@ -196,13 +206,13 @@ class PermissionsManager: ObservableObject {
     func getPermissionInstructions(for type: PermissionType) -> String {
         switch type {
         case .microphone:
-            return "1. Click 'Allow' when prompted\n2. Or go to System Preferences > Security & Privacy > Privacy > Microphone\n3. Enable Jarvis in the list"
+            return "1. Click 'Allow' when prompted\n2. Or go to System Settings > Privacy & Security > Microphone\n3. Enable Jarvis in the list"
         case .accessibility:
-            return "1. Go to System Preferences > Security & Privacy > Privacy > Accessibility\n2. Click the lock icon and enter your password\n3. Enable Jarvis in the list"
+            return "1. Go to System Settings > Privacy & Security > Accessibility\n2. Click the lock icon and enter your password\n3. Enable Jarvis in the list"
         case .automation:
-            return "1. Go to System Preferences > Security & Privacy > Privacy > Automation\n2. Click the lock icon and enter your password\n3. Enable Jarvis for System Events"
+            return "1. Go to System Settings > Privacy & Security > Automation\n2. Click the lock icon and enter your password\n3. Enable Jarvis for System Events"
         case .notification:
-            return "1. Go to System Preferences > Notifications & Focus > Jarvis\n2. Enable notifications for Jarvis\n3. Choose your preferred notification style"
+            return "1. Go to System Settings > Notifications > Jarvis\n2. Enable notifications for Jarvis\n3. Choose your preferred notification style"
         }
     }
     
@@ -230,28 +240,32 @@ class PermissionsManager: ObservableObject {
     private func setupObservers() {
         // Monitor for permission changes
         NotificationCenter.default.publisher(for: NSWorkspace.didWakeNotification)
-            .sink { [weak self] _ in
+            .sink { @Sendable [weak self] _ in
                 // Recheck permissions when system wakes
-                self?.checkAllPermissions()
+                Task { @MainActor in
+                    self?.checkAllPermissions()
+                }
             }
             .store(in: &cancellables)
         
         // Monitor for app activation
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
-            .sink { [weak self] _ in
+            .sink { @Sendable [weak self] _ in
                 // Recheck permissions when app becomes active
-                self?.checkAllPermissions()
+                Task { @MainActor in
+                    self?.checkAllPermissions()
+                }
             }
             .store(in: &cancellables)
     }
     
     // MARK: - Permission Validation
     func validatePermissionsForVoiceMode() -> PermissionValidationResult {
-        var missingPermissions: [PermissionType] = []
+        var missingPerms: [PermissionType] = []
         var warnings: [String] = []
         
         if microphonePermission != .granted {
-            missingPermissions.append(.microphone)
+            missingPerms.append(.microphone)
         }
         
         if accessibilityPermission != .granted {
@@ -263,14 +277,14 @@ class PermissionsManager: ObservableObject {
         }
         
         return PermissionValidationResult(
-            isValid: missingPermissions.isEmpty,
-            missingPermissions: missingPermissions,
+            isValid: missingPerms.isEmpty,
+            missingPermissions: missingPerms,
             warnings: warnings
         )
     }
     
     func validatePermissionsForChatMode() -> PermissionValidationResult {
-        var missingPermissions: [PermissionType] = []
+        var missingPerms: [PermissionType] = []
         var warnings: [String] = []
         
         if accessibilityPermission != .granted {
@@ -283,7 +297,7 @@ class PermissionsManager: ObservableObject {
         
         return PermissionValidationResult(
             isValid: true, // Chat mode doesn't require any permissions
-            missingPermissions: missingPermissions,
+            missingPermissions: missingPerms,
             warnings: warnings
         )
     }
@@ -351,9 +365,9 @@ enum PermissionType: String, CaseIterable {
         case .microphone:
             return "mic"
         case .accessibility:
-            return "accessibility"
+            return "figure.walk.circle"
         case .automation:
-            return "gearshape"
+            return "gearshape.2"
         case .notification:
             return "bell"
         }
@@ -401,4 +415,4 @@ extension PermissionsManager {
         manager.notificationPermission = .granted
         return manager
     }
-} 
+}

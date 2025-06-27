@@ -1,376 +1,161 @@
-import Foundation
-import AVFoundation
-import Combine
 import SwiftUI
-import Accelerate
 
 // MARK: - Audio Visualizer
-class AudioVisualizer: NSObject, ObservableObject {
-    // MARK: - Properties
-    private let audioManager: AudioManager
-    private let fft = FFTProcessor()
+class AudioVisualizer: ObservableObject {
+    @Published var audioLevels: [Float]
+    @Published var waveform: [Float]
+    @Published var peakLevel: Float = 0.0
     
-    @Published private(set) var waveformData: [Float] = []
-    @Published private(set) var spectrumData: [Float] = []
-    @Published private(set) var peakLevel: Float = 0.0
-    @Published private(set) var averageLevel: Float = 0.0
+    let barCount: Int
     
-    private var updateTimer: Timer?
-    private var cancellables = Set<AnyCancellable>()
+    init(barCount: Int = 30) {
+        self.barCount = barCount
+        self.audioLevels = Array(repeating: 0.0, count: barCount)
+        self.waveform = []
+    }
     
-    // MARK: - Configuration
-    private let waveformLength = 100
-    private let spectrumLength = 64
-    private let updateInterval: TimeInterval = 0.05 // 20 FPS
-    
-    // MARK: - Initialization
-    init(audioManager: AudioManager) {
-        self.audioManager = audioManager
-        super.init()
+    func updateLevels(with buffer: UnsafeBufferPointer<Float>) {
+        let step = buffer.count / barCount
+        var levels: [Float] = []
         
-        setupAudioMonitoring()
-        initializeData()
-    }
-    
-    deinit {
-        stopVisualization()
-    }
-    
-    // MARK: - Public Methods
-    func startVisualization() {
-        updateTimer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
-            self?.updateVisualization()
+        for i in 0..<barCount {
+            let start = i * step
+            let end = min((i + 1) * step, buffer.count)
+            let slice = Array(buffer[start..<end])
+            let rms = sqrt(slice.map { $0 * $0 }.reduce(0, +) / Float(slice.count))
+            levels.append(rms)
+        }
+        
+        DispatchQueue.main.async {
+            self.audioLevels = levels
+            self.peakLevel = levels.max() ?? 0.0
         }
     }
     
-    func stopVisualization() {
-        updateTimer?.invalidate()
-        updateTimer = nil
+    func updateWaveform(with buffer: UnsafeBufferPointer<Float>) {
+        DispatchQueue.main.async {
+            self.waveform = Array(buffer)
+        }
     }
     
     func reset() {
-        waveformData.removeAll()
-        spectrumData.removeAll()
+        audioLevels = Array(repeating: 0.0, count: barCount)
+        waveform = []
         peakLevel = 0.0
-        averageLevel = 0.0
-        initializeData()
     }
     
-    // MARK: - Private Methods
-    private func setupAudioMonitoring() {
-        audioManager.$audioLevel
-            .sink { [weak self] level in
-                self?.processAudioLevel(level)
-            }
-            .store(in: &cancellables)
+    func startVisualization() {
+        // No-op, handled by AudioManager
     }
     
-    private func initializeData() {
-        waveformData = Array(repeating: 0.0, count: waveformLength)
-        spectrumData = Array(repeating: 0.0, count: spectrumLength)
-    }
-    
-    private func processAudioLevel(_ level: Float) {
-        // Update peak and average levels
-        peakLevel = max(peakLevel, level)
-        averageLevel = (averageLevel * 0.9) + (level * 0.1)
-        
-        // Add to waveform data
-        waveformData.append(level)
-        if waveformData.count > waveformLength {
-            waveformData.removeFirst()
-        }
-        
-        // Generate spectrum data (simplified)
-        generateSpectrumData(from: level)
-    }
-    
-    private func generateSpectrumData(from level: Float) {
-        // Generate mock spectrum data based on audio level
-        // In practice, this would use FFT analysis
-        for i in 0..<spectrumLength {
-            let frequency = Float(i) / Float(spectrumLength)
-            let amplitude = level * (1.0 - frequency) * Float.random(in: 0.5...1.5)
-            spectrumData[i] = amplitude
-        }
-    }
-    
-    private func updateVisualization() {
-        // Update visualization data
-        // This is called periodically to provide smooth updates
-        objectWillChange.send()
+    func stopVisualization() {
+        // No-op, handled by AudioManager
     }
 }
 
-// MARK: - FFT Processor
-class FFTProcessor {
-    private let fftSetup: FFTSetup
-    private let log2n: vDSP_Length
-    private let n: vDSP_Length
-    
-    init() {
-        log2n = 10 // 1024 samples
-        n = 1 << log2n
-        fftSetup = vDSP_create_fftsetup(log2n, FFTRadix(kFFTRadix2))!
-    }
-    
-    deinit {
-        vDSP_destroy_fftsetup(fftSetup)
-    }
-    
-    func process(_ samples: [Float]) -> [Float] {
-        var realParts = [Float](repeating: 0, count: Int(n/2))
-        var imagParts = [Float](repeating: 0, count: Int(n/2))
-        
-        var splitComplex = DSPSplitComplex(realp: &realParts, imagp: &imagParts)
-        
-        // Convert to split complex format
-        samples.withUnsafeBufferPointer { samplesPtr in
-            vDSP_ctoz(samplesPtr.baseAddress!, 2, &splitComplex, 1, n/2)
-        }
-        
-        // Perform FFT
-        vDSP_fft_zrip(fftSetup, &splitComplex, 1, log2n, FFTDirection(FFT_FORWARD))
-        
-        // Calculate magnitude spectrum
-        var magnitudes = [Float](repeating: 0, count: Int(n/2))
-        vDSP_zvmags(&splitComplex, 1, &magnitudes, 1, n/2)
-        
-        // Convert to dB
-        var scaledMagnitudes = [Float](repeating: 0, count: Int(n/2))
-        vDSP_vdbcon(magnitudes, 1, [1.0], &scaledMagnitudes, 1, n/2, 1)
-        
-        return scaledMagnitudes
-    }
-}
-
-// MARK: - Audio Visualization Views
-struct WaveformView: View {
-    let data: [Float]
-    let color: Color
-    let lineWidth: CGFloat
-    
-    init(data: [Float], color: Color = .accentColor, lineWidth: CGFloat = 2.0) {
-        self.data = data
-        self.color = color
-        self.lineWidth = lineWidth
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            Path { path in
-                guard !data.isEmpty else { return }
-                
-                let width = geometry.size.width
-                let height = geometry.size.height
-                let centerY = height / 2
-                let stepX = width / CGFloat(data.count - 1)
-                
-                path.move(to: CGPoint(x: 0, y: centerY))
-                
-                for (index, value) in data.enumerated() {
-                    let x = CGFloat(index) * stepX
-                    let y = centerY + CGFloat(value) * centerY
-                    path.addLine(to: CGPoint(x: x, y: y))
-                }
-            }
-            .stroke(color, lineWidth: lineWidth)
-        }
-    }
-}
-
-struct SpectrumView: View {
-    let data: [Float]
-    let color: Color
-    let barWidth: CGFloat
-    let spacing: CGFloat
-    
-    init(data: [Float], color: Color = .accentColor, barWidth: CGFloat = 4.0, spacing: CGFloat = 2.0) {
-        self.data = data
-        self.color = color
-        self.barWidth = barWidth
-        self.spacing = spacing
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            HStack(spacing: spacing) {
-                ForEach(Array(data.enumerated()), id: \.offset) { index, value in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(color)
-                        .frame(width: barWidth, height: geometry.size.height * CGFloat(value))
-                        .animation(.easeInOut(duration: 0.1), value: value)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        }
-    }
-}
-
-struct CircularWaveformView: View {
-    let data: [Float]
-    let color: Color
-    let lineWidth: CGFloat
-    
-    init(data: [Float], color: Color = .accentColor, lineWidth: CGFloat = 2.0) {
-        self.data = data
-        self.color = color
-        self.lineWidth = lineWidth
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-            let radius = min(geometry.size.width, geometry.size.height) / 2 - lineWidth
-            
-            Path { path in
-                guard !data.isEmpty else { return }
-                
-                let angleStep = 2 * .pi / CGFloat(data.count)
-                
-                for (index, value) in data.enumerated() {
-                    let angle = CGFloat(index) * angleStep
-                    let adjustedRadius = radius * (0.5 + CGFloat(value) * 0.5)
-                    let x = center.x + cos(angle) * adjustedRadius
-                    let y = center.y + sin(angle) * adjustedRadius
-                    
-                    if index == 0 {
-                        path.move(to: CGPoint(x: x, y: y))
-                    } else {
-                        path.addLine(to: CGPoint(x: x, y: y))
-                    }
-                }
-                
-                path.closeSubpath()
-            }
-            .stroke(color, lineWidth: lineWidth)
-        }
-    }
-}
-
-struct AudioLevelMeter: View {
-    let level: Float
-    let peakLevel: Float
-    let color: Color
-    
-    init(level: Float, peakLevel: Float = 0.0, color: Color = .accentColor) {
-        self.level = level
-        self.peakLevel = peakLevel
-        self.color = color
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 2) {
-                // Peak level indicator
-                if peakLevel > 0 {
-                    Rectangle()
-                        .fill(color.opacity(0.8))
-                        .frame(height: 2)
-                        .scaleEffect(x: CGFloat(peakLevel), anchor: .leading)
-                        .animation(.easeOut(duration: 0.5), value: peakLevel)
-                }
-                
-                // Current level
-                Rectangle()
-                    .fill(color)
-                    .frame(height: 4)
-                    .scaleEffect(x: CGFloat(level), anchor: .leading)
-                    .animation(.easeInOut(duration: 0.1), value: level)
-            }
-        }
-    }
-}
-
-// MARK: - Audio Visualization Components
+// MARK: - Audio Visualization View
 struct AudioVisualizationView: View {
     @ObservedObject var visualizer: AudioVisualizer
     let style: VisualizationStyle
     
-    enum VisualizationStyle {
-        case waveform
-        case spectrum
-        case circular
-        case meter
-    }
-    
-    init(visualizer: AudioVisualizer, style: VisualizationStyle = .waveform) {
-        self.visualizer = visualizer
-        self.style = style
-    }
-    
     var body: some View {
         switch style {
-        case .waveform:
-            WaveformView(data: visualizer.waveformData)
-        case .spectrum:
-            SpectrumView(data: visualizer.spectrumData)
+        case .linear:
+            LinearAudioVisualizer(visualizer: visualizer)
         case .circular:
-            CircularWaveformView(data: visualizer.waveformData)
-        case .meter:
-            AudioLevelMeter(level: visualizer.averageLevel, peakLevel: visualizer.peakLevel)
+            CircularAudioVisualizer(visualizer: visualizer)
+        case .waveform:
+            WaveformAudioVisualizer(visualizer: visualizer)
+        }
+    }
+    
+    enum VisualizationStyle {
+        case linear
+        case circular
+        case waveform
+    }
+}
+
+// MARK: - Linear Audio Visualizer
+struct LinearAudioVisualizer: View {
+    @ObservedObject var visualizer: AudioVisualizer
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<visualizer.barCount, id: \.self) { index in
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: 2, height: CGFloat(visualizer.audioLevels[index] * 50))
+                    .animation(.easeInOut(duration: 0.1), value: visualizer.audioLevels[index])
+            }
         }
     }
 }
 
-// MARK: - Audio Visualization Configuration
-struct AudioVisualizationConfig {
-    let updateRate: TimeInterval
-    let waveformLength: Int
-    let spectrumLength: Int
-    let enableFFT: Bool
-    let smoothingFactor: Float
+// MARK: - Circular Audio Visualizer
+struct CircularAudioVisualizer: View {
+    @ObservedObject var visualizer: AudioVisualizer
     
-    static let standard = AudioVisualizationConfig(
-        updateRate: 0.05,
-        waveformLength: 100,
-        spectrumLength: 64,
-        enableFFT: false,
-        smoothingFactor: 0.1
-    )
-    
-    static let highQuality = AudioVisualizationConfig(
-        updateRate: 0.016, // 60 FPS
-        waveformLength: 200,
-        spectrumLength: 128,
-        enableFFT: true,
-        smoothingFactor: 0.05
-    )
+    var body: some View {
+        ZStack {
+            ForEach(0..<visualizer.barCount, id: \.self) { index in
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: 2, height: 10 + CGFloat(visualizer.audioLevels[index] * 40))
+                    .rotationEffect(.degrees(Double(index) / Double(visualizer.barCount) * 360))
+                    .offset(y: -60)
+                    .animation(.easeInOut(duration: 0.1), value: visualizer.audioLevels[index])
+            }
+        }
+    }
 }
 
-// MARK: - Audio Visualization Manager
-class AudioVisualizationManager: ObservableObject {
-    // MARK: - Properties
-    private let visualizer: AudioVisualizer
-    private let config: AudioVisualizationConfig
+// MARK: - Waveform Audio Visualizer
+struct WaveformAudioVisualizer: View {
+    @ObservedObject var visualizer: AudioVisualizer
     
-    @Published private(set) var isActive = false
-    @Published private(set) var currentStyle: AudioVisualizationView.VisualizationStyle = .waveform
-    
-    private var cancellables = Set<AnyCancellable>()
-    
-    // MARK: - Initialization
-    init(visualizer: AudioVisualizer, config: AudioVisualizationConfig = .standard) {
-        self.visualizer = visualizer
-        self.config = config
+    var body: some View {
+        Canvas { context, size in
+            var path = Path()
+            let step = size.width / CGFloat(visualizer.waveform.count)
+            
+            for (index, level) in visualizer.waveform.enumerated() {
+                let x = CGFloat(index) * step
+                let y = size.height / 2 + CGFloat(level) * size.height / 2
+                
+                if index == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            context.stroke(path, with: .color(Color.accentColor), lineWidth: 2)
+        }
     }
+}
+
+// MARK: - Audio Level Meter
+struct AudioLevelMeter: View {
+    let level: Float
+    let peakLevel: Float
     
-    // MARK: - Public Methods
-    func startVisualization() {
-        visualizer.startVisualization()
-        isActive = true
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: geometry.size.width * CGFloat(level))
+                
+                Rectangle()
+                    .fill(Color.red)
+                    .frame(width: 2, height: geometry.size.height)
+                    .offset(x: geometry.size.width * CGFloat(peakLevel))
+            }
+            .cornerRadius(4)
+        }
     }
-    
-    func stopVisualization() {
-        visualizer.stopVisualization()
-        isActive = false
-    }
-    
-    func setStyle(_ style: AudioVisualizationView.VisualizationStyle) {
-        currentStyle = style
-    }
-    
-    func reset() {
-        visualizer.reset()
-    }
-} 
+}

@@ -61,35 +61,15 @@ struct SearchRequest: Codable {
 
 // MARK: - API Response Models
 struct ChatResponse: Codable {
-    let id: UUID
+    let id: String
     let message: String
-    let conversationId: UUID
-    let timestamp: Date
+    let conversationId: String
+    let timestamp: String
     let model: String?
     let metadata: [String: CodableValue]?
     
     enum CodingKeys: String, CodingKey {
         case id, message, conversationId, timestamp, model, metadata
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        message = try container.decode(String.self, forKey: .message)
-        conversationId = try container.decode(UUID.self, forKey: .conversationId)
-        timestamp = try container.decode(Date.self, forKey: .timestamp)
-        model = try container.decodeIfPresent(String.self, forKey: .model)
-        metadata = try container.decodeIfPresent([String: CodableValue].self, forKey: .metadata)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(message, forKey: .message)
-        try container.encode(conversationId, forKey: .conversationId)
-        try container.encode(timestamp, forKey: .timestamp)
-        try container.encodeIfPresent(model, forKey: .model)
-        try container.encodeIfPresent(metadata, forKey: .metadata)
     }
 }
 
@@ -150,7 +130,7 @@ struct StatusResponse: Codable {
 struct ModelsResponse: Codable {
     let models: [ModelInfo]
     
-    struct ModelInfo: Codable {
+    struct ModelInfo: Codable, Identifiable {
         let id: String
         let name: String
         let description: String?

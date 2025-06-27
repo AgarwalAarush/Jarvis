@@ -70,8 +70,8 @@ class SettingsViewModel: ObservableObject {
             isSaving = false
             
             // Clear success message after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                self.successMessage = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.successMessage = nil
             }
         }
     }
@@ -103,7 +103,7 @@ class SettingsViewModel: ObservableObject {
                 return false
             }
             
-            if !url.scheme?.contains("http") == true {
+            if !(url.scheme?.contains("http") ?? false) {
                 errorMessage = "API URL must use HTTP or HTTPS"
                 return false
             }
@@ -210,9 +210,9 @@ class SettingsViewModel: ObservableObject {
             $generalSettings
         )
         .debounce(for: .seconds(2.0), scheduler: RunLoop.main)
-        .sink { [weak self] _, _, _ in
+        .sink { _ in
             // Auto-save is disabled for now to prevent conflicts
-            // self?.saveSettings()
+            // We can use the parameters for validation or other purposes
         }
         .store(in: &cancellables)
     }
@@ -238,8 +238,8 @@ class SettingsViewModel: ObservableObject {
         
         successMessage = "API connection test completed (placeholder)"
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.successMessage = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.successMessage = nil
         }
     }
     
@@ -250,8 +250,8 @@ class SettingsViewModel: ObservableObject {
         
         successMessage = "Voice settings test completed (placeholder)"
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.successMessage = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.successMessage = nil
         }
     }
 }
@@ -341,7 +341,15 @@ struct SettingsExport: Codable {
     let voiceSettings: VoiceSettings
     let generalSettings: GeneralSettings
     let exportDate: Date
-    let version: String = "1.0"
+    let version: String
+    
+    init(apiSettings: APISettings, voiceSettings: VoiceSettings, generalSettings: GeneralSettings, exportDate: Date) {
+        self.apiSettings = apiSettings
+        self.voiceSettings = voiceSettings
+        self.generalSettings = generalSettings
+        self.exportDate = exportDate
+        self.version = "1.0"
+    }
     
     var formattedExportDate: String {
         let formatter = DateFormatter()

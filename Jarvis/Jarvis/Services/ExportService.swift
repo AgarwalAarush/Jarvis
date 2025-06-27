@@ -2,6 +2,7 @@ import Foundation
 import CoreData
 import SwiftUI
 
+@MainActor
 class ExportService: ObservableObject {
     // MARK: - Published Properties
     @Published var isExporting = false
@@ -43,8 +44,8 @@ class ExportService: ObservableObject {
             successMessage = "Chat exported successfully"
             
             // Clear success message after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                self.successMessage = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.successMessage = nil
             }
             
             return exportURL
@@ -81,8 +82,8 @@ class ExportService: ObservableObject {
             successMessage = "Exported \(chatExports.count) chats successfully"
             
             // Clear success message after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                self.successMessage = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.successMessage = nil
             }
             
             return exportURL
@@ -124,8 +125,8 @@ class ExportService: ObservableObject {
             successMessage = "Exported \(chatExports.count) chats successfully"
             
             // Clear success message after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                self.successMessage = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.successMessage = nil
             }
             
             return exportURL
@@ -405,7 +406,7 @@ struct BulkChatExport: Codable {
     let exportDate: Date
     let totalChats: Int
     let totalMessages: Int
-    let version: String = "1.0"
+    var version: String = "1.0"
     
     var formattedExportDate: String {
         let formatter = DateFormatter()

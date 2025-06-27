@@ -5,39 +5,33 @@ struct SidebarView: View {
     @EnvironmentObject var dataController: DataController
     
     var body: some View {
-        List {
-            Section("Navigation") {
-                NavigationLink(
-                    destination: ChatView(),
-                    tag: TabSelection.chat,
-                    selection: $stateManager.selectedTab
-                ) {
-                    Label("Chat", systemImage: "message")
-                }
-                
-                NavigationLink(
-                    destination: VoiceModeView(),
-                    tag: TabSelection.voice,
-                    selection: $stateManager.selectedTab
-                ) {
-                    Label("Voice", systemImage: "mic")
-                }
-                
-                NavigationLink(
-                    destination: SearchView(),
-                    tag: TabSelection.search,
-                    selection: $stateManager.selectedTab
-                ) {
-                    Label("Search", systemImage: "magnifyingglass")
+        VStack(spacing: 0) {
+            // Navigation Section
+            List {
+                Section("Navigation") {
+                    NavigationLink(value: TabSelection.chat) {
+                        Label("Chat", systemImage: "message")
+                    }
+                    
+                    NavigationLink(value: TabSelection.voice) {
+                        Label("Voice", systemImage: "mic")
+                    }
+                    
+                    NavigationLink(value: TabSelection.search) {
+                        Label("Search", systemImage: "magnifyingglass")
+                    }
                 }
             }
+            .listStyle(SidebarListStyle())
+            .frame(height: 120)
+            .background(Color(NSColor.controlBackgroundColor))
             
-            Section("Recent Conversations") {
-                ChatListView()
-            }
+            // Recent Conversations Section
+            ChatListView()
         }
-        .listStyle(SidebarListStyle())
-        .frame(minWidth: 200)
+        .frame(minWidth: 220, idealWidth: 280, maxWidth: 350)
+        .background(Color(NSColor.controlBackgroundColor))
+        .clipped()
     }
 }
 
@@ -47,7 +41,6 @@ struct ChatListView: View {
     @EnvironmentObject var stateManager: JarvisStateManager
     @State private var searchText = ""
     @State private var showingCreateChat = false
-    @State private var selectedFilter: ChatFilter = .all
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Chat.updatedAt, ascending: false)],
@@ -56,100 +49,97 @@ struct ChatListView: View {
     ) private var allChats: FetchedResults<Chat>
     
     var filteredChats: [Chat] {
-        let chats = allChats.filter { chat in
-            if searchText.isEmpty { return true }
-            return (chat.title ?? "").localizedCaseInsensitiveContains(searchText) ||
-                   (chat.messages as? Set<Message>)?.contains { message in
-                       (message.content ?? "").localizedCaseInsensitiveContains(searchText)
-                   } == true
+        if searchText.isEmpty {
+            return Array(allChats)
         }
         
-        switch selectedFilter {
-        case .all:
-            return Array(chats)
-        case .recent:
-            return Array(chats.prefix(10))
-        case .today:
-            let today = Calendar.current.startOfDay(for: Date())
-            return chats.filter { chat in
-                chat.updatedAt ?? .distantPast >= today
-            }
-        case .thisWeek:
-            let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-            return chats.filter { chat in
-                chat.updatedAt ?? .distantPast >= weekAgo
-            }
+        return allChats.filter { chat in
+            (chat.title ?? "").localizedCaseInsensitiveContains(searchText) ||
+            (chat.messages as? Set<Message>)?.contains { message in
+                (message.content ?? "").localizedCaseInsensitiveContains(searchText)
+            } == true
         }
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            // Search and filter controls
-            VStack(spacing: 8) {
-                // Search bar
+            // Header
+            VStack(spacing: 12) {
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Search conversations...", text: $searchText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
+                    Text("Recent Conversations")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
                 }
                 
-                // Filter picker
-                Picker("Filter", selection: $selectedFilter) {
-                    ForEach(ChatFilter.allCases, id: \.self) { filter in
-                        Text(filter.displayName).tag(filter)
+                // Modern search bar
+                ModernSearchField(
+                    text: $searchText,
+                    placeholder: "Search conversations...",
+                    onClear: {
+                        searchText = ""
                     }
-                }
-                .pickerStyle(SegmentedPickerStyle())
+                )
+                .frame(maxWidth: .infinity)
+                
             }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             
             // Chat list
-            if filteredChats.isEmpty {
-                EmptyChatListView(searchText: searchText, filter: selectedFilter)
-            } else {
-                ForEach(filteredChats) { chat in
-                    ChatRowView(chat: chat)
-                        .contextMenu {
-                            Button("Rename") {
-                                // TODO: Implement rename functionality
-                            }
-                            
-                            Button("Export") {
-                                // TODO: Implement export functionality
-                            }
-                            
-                            Divider()
-                            
-                            Button("Delete", role: .destructive) {
-                                deleteChat(chat)
-                            }
+            ScrollView {
+                LazyVStack(spacing: 4) {
+                    if filteredChats.isEmpty {
+                        EmptyChatListView(searchText: searchText)
+                    } else {
+                        ForEach(filteredChats) { chat in
+                            ChatRowView(chat: chat)
+                                .contextMenu {
+                                    Button("Rename") {
+                                        // TODO: Implement rename functionality
+                                    }
+                                    
+                                    Button("Export") {
+                                        // TODO: Implement export functionality
+                                    }
+                                    
+                                    Divider()
+                                    
+                                    Button("Delete", role: .destructive) {
+                                        deleteChat(chat)
+                                    }
+                                }
                         }
+                    }
                 }
+                .padding(.horizontal, 8)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Create new chat button
-            Button(action: { showingCreateChat = true }) {
+            // Create new chat button - floating in bottom right
+            ZStack {
+                Color.clear
+                    .frame(height: 60)
+                
                 HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("New Chat")
+                    Spacer()
+                    
+                    Button(action: { showingCreateChat = true }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 32, height: 32)
+                            .background(Color.accentColor)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .help("New Chat")
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 16)
                 }
-                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(PlainButtonStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 8)
         }
+        .background(Color(NSColor.controlBackgroundColor))
         .sheet(isPresented: $showingCreateChat) {
             CreateChatView()
         }
@@ -170,7 +160,6 @@ struct ChatListView: View {
 // MARK: - Empty Chat List View
 struct EmptyChatListView: View {
     let searchText: String
-    let filter: ChatFilter
     
     var body: some View {
         VStack(spacing: 12) {
@@ -194,34 +183,16 @@ struct EmptyChatListView: View {
     private var emptyStateTitle: String {
         if !searchText.isEmpty {
             return "No conversations found"
-        }
-        
-        switch filter {
-        case .all:
+        } else {
             return "No conversations yet"
-        case .recent:
-            return "No recent conversations"
-        case .today:
-            return "No conversations today"
-        case .thisWeek:
-            return "No conversations this week"
         }
     }
     
     private var emptyStateMessage: String {
         if !searchText.isEmpty {
-            return "Try adjusting your search terms or filters"
-        }
-        
-        switch filter {
-        case .all:
+            return "Try adjusting your search terms"
+        } else {
             return "Start a new conversation to begin chatting with Jarvis"
-        case .recent:
-            return "Your recent conversations will appear here"
-        case .today:
-            return "No conversations have been updated today"
-        case .thisWeek:
-            return "No conversations have been updated this week"
         }
     }
 }
@@ -310,26 +281,26 @@ struct ChatRowView: View {
             HStack(spacing: 12) {
                 // Chat icon
                 Image(systemName: "message.circle.fill")
-                    .foregroundColor(.accentColor)
-                    .font(.title2)
+                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .font(.system(size: 16, weight: .medium))
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(chat.title ?? "Untitled Chat")
-                        .font(.headline)
+                        .font(.system(size: 14, weight: .medium))
                         .lineLimit(1)
-                        .foregroundColor(.primary)
+                        .foregroundColor(isSelected ? .white : .primary)
                     
                     if let lastMessage = getLastMessage() {
                         Text(lastMessage)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12))
+                            .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
                             .lineLimit(2)
                     }
                     
                     if let updatedAt = chat.updatedAt {
                         Text(updatedAt, style: .relative)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 11))
+                            .foregroundColor(isSelected ? .white.opacity(0.7) : .secondary)
                     }
                 }
                 
@@ -338,25 +309,41 @@ struct ChatRowView: View {
                 // Message count badge
                 if let messageCount = (chat.messages as? Set<Message>)?.count, messageCount > 0 {
                     Text("\(messageCount)")
-                        .font(.caption2)
-                        .foregroundColor(.white)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(isSelected ? .accentColor : .white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.accentColor)
+                        .background(isSelected ? .white : .accentColor)
                         .clipShape(Capsule())
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .fill(backgroundColor)
             )
             .onHover { hovering in
-                isHovered = hovering
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isHovered = hovering
+                }
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var isSelected: Bool {
+        stateManager.currentChatId == chat.id
+    }
+    
+    private var backgroundColor: Color {
+        if isSelected {
+            return .accentColor
+        } else if isHovered {
+            return Color.accentColor.opacity(0.1)
+        } else {
+            return Color.clear
+        }
     }
     
     private func getLastMessage() -> String? {
@@ -366,26 +353,6 @@ struct ChatRowView: View {
     }
 }
 
-// MARK: - Chat Filter Enum
-enum ChatFilter: CaseIterable {
-    case all
-    case recent
-    case today
-    case thisWeek
-    
-    var displayName: String {
-        switch self {
-        case .all:
-            return "All"
-        case .recent:
-            return "Recent"
-        case .today:
-            return "Today"
-        case .thisWeek:
-            return "This Week"
-        }
-    }
-}
 
 // MARK: - Preview
 struct SidebarView_Previews: PreviewProvider {

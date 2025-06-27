@@ -323,7 +323,7 @@ class SearchService: ObservableObject {
     private func setupObservers() {
         // Monitor Core Data changes for search updates
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-            .sink { [weak self] _ in
+            .sink { _ in
                 // Optionally refresh search results when data changes
             }
             .store(in: &cancellables)

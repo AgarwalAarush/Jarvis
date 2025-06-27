@@ -22,6 +22,7 @@ struct ChatView: View {
         }
         .background(Color(NSColor.controlBackgroundColor))
         .onAppear {
+            viewModel.setDataController(dataController)
             viewModel.loadChat(id: stateManager.currentChatId)
         }
         .onChange(of: stateManager.currentChatId) { oldValue, newValue in
@@ -47,7 +48,17 @@ struct ChatView: View {
             Spacer()
             
             // Connection status indicator
-            ConnectionStatusView()
+            ConnectionStatusView(connectionStatus: viewModel.connectionStatus)
+            
+            // Error indicator
+            if viewModel.errorMessage != nil {
+                Button(action: viewModel.clearError) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .help(viewModel.errorMessage ?? "Unknown error")
+            }
         }
         .padding()
     }
@@ -64,7 +75,12 @@ struct ChatView: View {
                     
                     if viewModel.isLoading {
                         LoadingIndicator()
-                            .padding()
+                            .padding(16)
+                    }
+                    
+                    if viewModel.isRetrying {
+                        RetryIndicator()
+                            .padding(16)
                     }
                 }
                 .padding(.vertical)
@@ -83,7 +99,7 @@ struct ChatView: View {
 
 // MARK: - Connection Status View
 struct ConnectionStatusView: View {
-    @EnvironmentObject var stateManager: JarvisStateManager
+    let connectionStatus: ConnectionStatus
     
     var body: some View {
         HStack(spacing: 4) {
@@ -98,7 +114,7 @@ struct ConnectionStatusView: View {
     }
     
     private var connectionColor: Color {
-        switch stateManager.connectionStatus {
+        switch connectionStatus {
         case .connected:
             return .green
         case .connecting, .reconnecting:
@@ -109,7 +125,7 @@ struct ConnectionStatusView: View {
     }
     
     private var connectionText: String {
-        switch stateManager.connectionStatus {
+        switch connectionStatus {
         case .connected:
             return "Connected"
         case .connecting:
@@ -149,6 +165,31 @@ struct LoadingIndicator: View {
     }
 }
 
+// MARK: - Retry Indicator
+struct RetryIndicator: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.clockwise")
+                .foregroundColor(.orange)
+                .rotationEffect(.degrees(isAnimating ? 360 : 0))
+                .animation(
+                    Animation.linear(duration: 1.0)
+                        .repeatForever(autoreverses: false),
+                    value: isAnimating
+                )
+            
+            Text("Retrying...")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
 // MARK: - Preview
 struct ChatView_Previews: PreviewProvider {
     static var previews: some View {
@@ -156,4 +197,16 @@ struct ChatView_Previews: PreviewProvider {
             .environmentObject(DataController.preview)
             .environmentObject(JarvisStateManager.preview)
     }
-} 
+}
+
+struct ConnectionStatusView_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 16) {
+            ConnectionStatusView(connectionStatus: .connected)
+            ConnectionStatusView(connectionStatus: .connecting)
+            ConnectionStatusView(connectionStatus: .disconnected)
+            ConnectionStatusView(connectionStatus: .error("Network timeout"))
+        }
+        .padding()
+    }
+}
